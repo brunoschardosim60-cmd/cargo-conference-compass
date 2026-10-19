@@ -2,6 +2,14 @@
 
 A configuração Lovable permanece preservada. O Nitro existente produz o formato Build Output API da Vercel quando compilado com `NITRO_PRESET=vercel`.
 
+## Publicação pelo GitHub
+
+O projeto `cargo-conference-compass` está conectado ao repositório na conta Vercel `brunoschardosim60-cmds-projects`. A branch de produção configurada é `codex/reconstrucao-poa`. Novos commits enviados a essa branch disparam a publicação automática, com o preset TanStack Start detectado pela Vercel.
+
+Domínio atribuído ao projeto: https://cargo-conference-compass.vercel.app
+
+Para uma publicação pelo painel, abra Deployments no projeto e acompanhe a compilação do commit desejado. Verifique o commit e o estado Ready antes de considerar a versão disponível. A branch `main` continua preservada para o fluxo existente do Lovable.
+
 ## Publicar a versão local revisada
 
 No PowerShell, na pasta do projeto:
