@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PendenciasRouteImport } from './routes/pendencias'
+import { Route as ConferenciasIndexRouteImport } from './routes/conferencias.index'
+import { Route as ConferenciasIdRouteImport } from './routes/conferencias.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PendenciasRoute = PendenciasRouteImport.update({
+  id: '/pendencias',
+  path: '/pendencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConferenciasIndexRoute = ConferenciasIndexRouteImport.update({
+  id: '/conferencias/',
+  path: '/conferencias/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConferenciasIdRoute = ConferenciasIdRouteImport.update({
+  id: '/conferencias/$id',
+  path: '/conferencias/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/pendencias': typeof PendenciasRoute
+  '/conferencias/$id': typeof ConferenciasIdRoute
+  '/conferencias/': typeof ConferenciasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/pendencias': typeof PendenciasRoute
+  '/conferencias/$id': typeof ConferenciasIdRoute
+  '/conferencias': typeof ConferenciasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/pendencias': typeof PendenciasRoute
+  '/conferencias/$id': typeof ConferenciasIdRoute
+  '/conferencias/': typeof ConferenciasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/pendencias' | '/conferencias/$id' | '/conferencias/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/pendencias' | '/conferencias/$id' | '/conferencias'
+  id: '__root__' | '/' | '/pendencias' | '/conferencias/$id' | '/conferencias/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PendenciasRoute: typeof PendenciasRoute
+  ConferenciasIdRoute: typeof ConferenciasIdRoute
+  ConferenciasIndexRoute: typeof ConferenciasIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pendencias': {
+      id: '/pendencias'
+      path: '/pendencias'
+      fullPath: '/pendencias'
+      preLoaderRoute: typeof PendenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conferencias/': {
+      id: '/conferencias/'
+      path: '/conferencias'
+      fullPath: '/conferencias/'
+      preLoaderRoute: typeof ConferenciasIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conferencias/$id': {
+      id: '/conferencias/$id'
+      path: '/conferencias/$id'
+      fullPath: '/conferencias/$id'
+      preLoaderRoute: typeof ConferenciasIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PendenciasRoute: PendenciasRoute,
+  ConferenciasIdRoute: ConferenciasIdRoute,
+  ConferenciasIndexRoute: ConferenciasIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
