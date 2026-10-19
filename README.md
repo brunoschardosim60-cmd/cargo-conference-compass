@@ -1,24 +1,29 @@
-# Cargo Conference Compass
+# Conferência Logística POA
 
-Implement exactly the screenshot and nothing else
+Interface interna para avaliar o fluxo de recebimento, conferência física e tratamento administrativo da filial Porto Alegre.
 
-This project was built with [Lovable](https://lovable.dev).
+## Estado atual
 
-## Build with Lovable
+Etapas 1–3 implementadas: auditoria, design system e frontend reconstruído. Os dados são fictícios. Alterações são mantidas em memória durante a página aberta e descartadas ao recarregar. Autenticação, permissões no backend, banco, PDFs e evidências pertencem à próxima etapa.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/42f74fe8-916d-42a4-89cf-fe19887191d7).
+- [Auditoria, arquitetura e arquivos modificados](docs/RECONSTRUCAO-POA.md)
+- [Verificações e roteiro de avaliação](docs/VALIDACAO.md)
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## Desenvolvimento
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+npm install
+npm run dev -- --host 127.0.0.1 --port 4173
 ```
+
+## Verificação
+
+```sh
+npx tsc --noEmit
+npm test
+npm run build
+```
+
+React, TypeScript, TanStack Start/Router, Tailwind, Radix e Vite. A configuração de execução do Lovable foi mantida.
+
+O projeto continua vinculado ao [Lovable](https://lovable.dev/projects/42f74fe8-916d-42a4-89cf-fe19887191d7). Alterações publicadas na branch conectada podem sincronizar com o editor; não reescrever histórico publicado.

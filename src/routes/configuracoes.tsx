@@ -1,14 +1,118 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader, Panel, NotConnected } from "@/components/ui-kit";
 import { meta } from "@/lib/meta";
-
+import { createFileRoute } from "@tanstack/react-router";
+import { Building2, ShieldCheck, FileText, Database, Info } from "lucide-react";
+import { PageHeader, Panel } from "@/components/ui-kit";
+import { Pill } from "@/components/status";
 export const Route = createFileRoute("/configuracoes")({
-  head: () => meta("Configurações", "Filiais, docas e preferências do sistema."),
-  component: () => (
-    <div className="mx-auto max-w-7xl space-y-5">
-      <PageHeader title="Configurações" subtitle="Filiais, docas e preferências do sistema." />
-      <NotConnected>Módulo em preparação — será detalhado na próxima etapa.</NotConnected>
-      <Panel><p className="text-sm text-muted-foreground">Nenhum dado conectado ainda.</p></Panel>
-    </div>
-  ),
+  head: () => meta("Configurações", "Conferência logística interna da filial POA."),
+  component: Page,
 });
+function Row({ title, text, value }: { title: string; text: string; value: React.ReactNode }) {
+  return (
+    <div className="setting-row">
+      <div>
+        <strong className="font-medium">{title}</strong>
+        <small>{text}</small>
+      </div>
+      {value}
+    </div>
+  );
+}
+function Page() {
+  return (
+    <>
+      <div className="eyebrow">ADMINISTRAÇÃO / AMBIENTE</div>
+      <PageHeader
+        title="Configurações"
+        subtitle="Escopo da unidade, regras operacionais e preparação para a próxima etapa."
+      />
+      <div className="settings-grid">
+        <Panel
+          title="Unidade operacional"
+          actions={<Building2 size={16} className="text-muted-foreground" />}
+        >
+          <Row
+            title="Filial"
+            text="Primeira unidade atendida pela aplicação."
+            value={<span>Porto Alegre · POA</span>}
+          />
+          <Row
+            title="Fuso horário"
+            text="Horário dos novos registros nesta demonstração."
+            value={<span>America/Sao_Paulo</span>}
+          />
+          <Row
+            title="Outras filiais"
+            text="Arquitetura preparada para expansão; operação multi-filial fora desta versão."
+            value={<Pill tone="neutral">Futuro</Pill>}
+          />
+        </Panel>
+        <Panel
+          title="Dados e segurança"
+          actions={<Database size={16} className="text-muted-foreground" />}
+        >
+          <Row
+            title="Persistência"
+            text="Alterações compartilhadas entre telas durante esta página aberta. Recarregar reinicia a amostra."
+            value={<Pill tone="warning">Sessão local</Pill>}
+          />
+          <Row
+            title="Autenticação e permissões"
+            text="Exigem serviço de identidade e validação em todas as ações no servidor."
+            value={<Pill tone="neutral">Etapa 4</Pill>}
+          />
+          <Row
+            title="Auditoria"
+            text="Histórico visível na sessão. Armazenamento imutável ainda não conectado."
+            value={<Pill tone="neutral">Etapa 4</Pill>}
+          />
+        </Panel>
+        <Panel
+          title="Regras da conferência"
+          actions={<ShieldCheck size={16} className="text-muted-foreground" />}
+        >
+          <Row
+            title="Identidade por operação"
+            text="Notas e pendências mantêm vínculo explícito com a carga de origem."
+            value={<Pill tone="success">Na interface</Pill>}
+          />
+          <Row
+            title="Validação da contagem"
+            text="Quantidades inteiras e não negativas; divergências precisam de observação."
+            value={<Pill tone="success">Na interface</Pill>}
+          />
+          <Row
+            title="Finalização"
+            text="Exige todas as notas contadas e uma confirmação explícita."
+            value={<Pill tone="success">Na interface</Pill>}
+          />
+        </Panel>
+        <Panel
+          title="Documentos e sistemas oficiais"
+          actions={<FileText size={16} className="text-muted-foreground" />}
+        >
+          <Row
+            title="Importação de PDF"
+            text="Extração multipágina, revisão humana, prevenção de duplicidades e guarda do original."
+            value={<Pill tone="neutral">Etapa 4</Pill>}
+          />
+          <Row
+            title="Códigos oficiais"
+            text="Nenhum código validado nesta versão. Catálogo dependerá da confirmação da operação."
+            value={<Pill tone="warning">A validar</Pill>}
+          />
+          <Row
+            title="Integração Luft"
+            text="Nenhuma integração oficial conectada. Informações oficiais são lançadas externamente."
+            value={<Pill tone="neutral">Manual</Pill>}
+          />
+        </Panel>
+      </div>
+      <div className="info-strip mt-5">
+        <Info size={17} className="shrink-0" />
+        Esta tela documenta os parâmetros atuais. Edição de permissões e parâmetros será
+        disponibilizada com autenticação administrativa no backend.
+      </div>
+    </>
+  );
+}

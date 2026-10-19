@@ -1,81 +1,159 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ClipboardCheck, AlertTriangle, PackageX, FileWarning, PackageSearch, Siren, CheckCircle2, FileCheck2 } from "lucide-react";
-import { PageHeader, Panel, DataTable, NotConnected, Mono } from "@/components/ui-kit";
-import { StatusPill, confMap } from "@/components/status";
-import { conferencias, eventos } from "@/lib/demo-data";
+import {
+  ArrowUpRight,
+  ArrowRight,
+  ClipboardCheck,
+  Clock3,
+  CheckCircle2,
+  AlertTriangle,
+  PackageSearch,
+  Radio,
+} from "lucide-react";
+import { PageHeader, Panel } from "@/components/ui-kit";
+import { OperationTable } from "@/components/operation-table";
+import { useOperations } from "@/lib/operation-context";
 import { meta } from "@/lib/meta";
-
 export const Route = createFileRoute("/")({
-  head: () => meta("Visão geral", "Painel operacional da filial: conferências, faltas, divergências e ocorrências."),
+  head: () => meta("Visão geral", "Prioridades e operações da filial POA."),
   component: Dashboard,
 });
-
-const kpis = [
-  { label: "Conferências em andamento", value: 2, icon: ClipboardCheck, tone: "text-info" },
-  { label: "Conferências concluídas (hoje)", value: 2, icon: CheckCircle2, tone: "text-success" },
-  { label: "NFs conferidas", value: 186, icon: FileCheck2, tone: "text-success" },
-  { label: "Faltas de volumes em aberto", value: 3, icon: PackageX, tone: "text-danger" },
-  { label: "NFs com divergência", value: 5, icon: FileWarning, tone: "text-warning" },
-  { label: "Excedentes / não identificados", value: 2, icon: AlertTriangle, tone: "text-warning" },
-  { label: "Extraviados aguardando retorno", value: 3, icon: PackageSearch, tone: "text-warning" },
-  { label: "Ocorrências p/ administrativo", value: 4, icon: Siren, tone: "text-danger" },
-];
-
 function Dashboard() {
+  const { state } = useOperations();
+  const metrics = [
+    {
+      label: "Em conferência",
+      value: state.operations.filter((o) => o.status === "em_andamento").length,
+      hint: "Operações no pavilhão",
+      icon: ClipboardCheck,
+      to: "/conferencias",
+    },
+    {
+      label: "Aguardando / pausadas",
+      value: state.operations.filter((o) => ["aguardando", "pausada"].includes(o.status)).length,
+      hint: "Próximas operações da fila",
+      icon: Clock3,
+      to: "/conferencias",
+    },
+    {
+      label: "Concluídas",
+      value: state.operations.filter((o) => o.status === "concluida").length,
+      hint: "Operações na amostra",
+      icon: CheckCircle2,
+      to: "/conferencias",
+    },
+    {
+      label: "Pendências abertas",
+      value: state.cases.filter((c) => !["resolvida", "cancelada"].includes(c.status)).length,
+      hint: "Acompanhamento administrativo",
+      icon: AlertTriangle,
+      to: "/pendencias",
+    },
+  ] as const;
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <PageHeader title="Visão geral" subtitle="Filial Porto Alegre · segunda-feira, 19 de outubro" />
-      <NotConnected>
-        <strong>Modo demonstração.</strong> Todos os números e registros abaixo são fictícios. Banco de dados, login individual e permissões no servidor ainda não estão conectados.
-      </NotConnected>
-
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border md:grid-cols-4">
-        {kpis.map((k) => (
-          <div key={k.label} className="bg-card p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{k.label}</span>
-              <k.icon className={`size-4 ${k.tone}`} />
+    <>
+      <div className="eyebrow">CONTROLE OPERACIONAL / PORTO ALEGRE</div>
+      <PageHeader
+        title="O trabalho da operação, em um só lugar."
+        subtitle="Acompanhe o recebimento, avance nas conferências e mantenha as pendências em movimento."
+        actions={
+          <Link to="/conferencias" className="table-link">
+            Gerenciar operações <ArrowUpRight size={16} />
+          </Link>
+        }
+      />
+      <div className="metrics">
+        {metrics.map((m) => (
+          <Link to={m.to} className="metric" key={m.label}>
+            <div className="metric-top">
+              {m.label}
+              <m.icon size={17} />
             </div>
-            <div className="mt-2 text-2xl font-semibold tabular">{k.value}</div>
-          </div>
+            <div className="metric-value">{String(m.value).padStart(2, "0")}</div>
+            <small>{m.hint}</small>
+          </Link>
         ))}
       </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Panel title="Conferências recentes" flush className="lg:col-span-2"
-          actions={<Link to="/conferencias" className="text-xs font-medium text-info hover:underline">Ver todas</Link>}>
-          <DataTable head={["Operação", "Chegada", "Responsável", "NFs", "Situação", ""]}>
-            {conferencias.map((c) => (
-              <tr key={c.id}>
-                <td><Mono>{c.id}</Mono><div className="text-xs text-muted-foreground">{c.origem}</div></td>
-                <td className="tabular">{c.chegada}</td>
-                <td>{c.responsavel}</td>
-                <td className="tabular">{c.notas}</td>
-                <td><StatusPill map={confMap} value={c.status} /></td>
-                <td className="text-right">
-                  <Link to="/conferencias/$id" params={{ id: c.id }} className="inline-flex items-center text-muted-foreground hover:text-foreground" aria-label="Detalhes">
-                    <ArrowRight className="size-4" />
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </DataTable>
-        </Panel>
-
-        <Panel title="Atividades recentes">
-          <ol className="space-y-4">
-            {eventos.slice(0, 7).map((e) => (
-              <li key={e.id} className="flex gap-3 text-sm">
-                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-                <div>
-                  <p>{e.descricao}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{e.usuario} · {e.quando}</p>
+      <div className="dashboard-grid">
+        <div className="space-y-5">
+          <Panel
+            title="Operações de recebimento"
+            actions={
+              <Link to="/conferencias" className="table-link">
+                Ver todas <ArrowRight size={13} />
+              </Link>
+            }
+            flush
+          >
+            <OperationTable rows={state.operations} />
+            <div className="table-footer">
+              <span>{state.operations.length} operações · base de demonstração</span>
+              <span>Progresso por notas verificadas</span>
+            </div>
+          </Panel>
+          <Panel
+            title="Últimas movimentações"
+            actions={
+              <Link to="/historico" className="table-link">
+                Histórico completo <ArrowRight size={13} />
+              </Link>
+            }
+            flush
+          >
+            <div className="divide-y">
+              {state.history.slice(0, 3).map((e) => (
+                <div className="flex items-start gap-3 px-5 py-4" key={e.id}>
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-info" />
+                  <div className="min-w-0">
+                    <p className="text-xs leading-relaxed line-clamp-2">{e.descricao}</p>
+                    <p className="cell-sub">
+                      {e.usuario} · {e.quando} · {e.ref}
+                    </p>
+                  </div>
                 </div>
-              </li>
-            ))}
-          </ol>
+              ))}
+            </div>
+          </Panel>
+        </div>
+        <Panel title="Exige atenção" flush>
+          <div className="dashboard-priorities">
+            <Link to="/pendencias" className="priority">
+              <div className="priority-line">
+                <AlertTriangle size={15} className="text-warning" />
+                {state.cases.filter((c) => c.status === "nova").length} pendências sem análise
+              </div>
+              <p>Revise as divergências do pavilhão e defina a próxima providência.</p>
+              <small>Abrir central administrativa →</small>
+            </Link>
+            <Link to="/conferencias" className="priority">
+              <div className="priority-line">
+                <Clock3 size={15} className="text-info" />
+                Conferências para retomar
+              </div>
+              <p>
+                {state.operations.filter((o) => o.status === "pausada").length} operação pausada. O
+                progresso registrado permanece nesta sessão.
+              </p>
+              <small>Consultar fila de operações →</small>
+            </Link>
+            <Link to="/extraviados" className="priority">
+              <div className="priority-line">
+                <PackageSearch size={15} />
+                Volumes de outras praças
+              </div>
+              <p>Controle separado para identificação e encaminhamento ao destino correto.</p>
+              <small>Acompanhar encaminhamentos →</small>
+            </Link>
+          </div>
         </Panel>
       </div>
-    </div>
+      <div className="info-strip mt-6">
+        <Radio size={16} className="shrink-0 mt-0.5" />
+        <span>
+          <strong>Do pavilhão ao administrativo.</strong> O registro interno organiza o
+          acompanhamento. Ocorrências oficiais continuam sendo lançadas manualmente nos sistemas da
+          Luft.
+        </span>
+      </div>
+    </>
   );
 }

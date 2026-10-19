@@ -1,105 +1,257 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  LayoutDashboard, ClipboardCheck, FileText, AlertTriangle, PackageSearch, Siren,
-  History, Users, Settings, Search, Menu, X, ChevronDown, Truck,
+  LayoutDashboard,
+  ClipboardCheck,
+  FileText,
+  AlertTriangle,
+  PackageSearch,
+  Radio,
+  History,
+  Users,
+  Settings,
+  Search,
+  Menu,
+  ArrowUpRight,
+  Building2,
+  ChevronRight,
+  Box,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useOperations } from "@/lib/operation-context";
 import { cn } from "@/lib/utils";
 
-const nav = [
-  { to: "/", label: "Visão geral", icon: LayoutDashboard },
-  { to: "/conferencias", label: "Conferências", icon: ClipboardCheck },
-  { to: "/notas", label: "Notas fiscais", icon: FileText },
-  { to: "/pendencias", label: "Pendências e faltas", icon: AlertTriangle },
-  { to: "/extraviados", label: "Extraviados de outras praças", icon: PackageSearch },
-  { to: "/ocorrencias", label: "Ocorrências", icon: Siren },
-  { to: "/historico", label: "Histórico", icon: History },
-  { to: "/usuarios", label: "Usuários e permissões", icon: Users },
-  { to: "/configuracoes", label: "Configurações", icon: Settings },
+const groups = [
+  {
+    label: "OPERAÇÃO",
+    items: [
+      { to: "/", label: "Visão geral", icon: LayoutDashboard },
+      { to: "/conferencias", label: "Conferências", icon: ClipboardCheck },
+      { to: "/notas", label: "Notas fiscais", icon: FileText },
+    ],
+  },
+  {
+    label: "ACOMPANHAMENTO",
+    items: [
+      { to: "/pendencias", label: "Central de pendências", icon: AlertTriangle },
+      { to: "/extraviados", label: "Outras praças", icon: PackageSearch },
+      { to: "/ocorrencias", label: "Acompanhamento da torre", icon: Radio },
+    ],
+  },
+  {
+    label: "ADMINISTRAÇÃO",
+    items: [
+      { to: "/historico", label: "Histórico de atividades", icon: History },
+      { to: "/usuarios", label: "Usuários e acessos", icon: Users },
+      { to: "/configuracoes", label: "Configurações", icon: Settings },
+    ],
+  },
 ] as const;
-
-const titles: Record<string, string> = Object.fromEntries(nav.map((n) => [n.to, n.label]));
-
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const isActive = (to: string) => (to === "/" ? path === "/" : path.startsWith(to));
-  const title = titles[path] ?? (path.startsWith("/conferencias/") ? "Conferência" : "");
-
+  const navigate = useNavigate();
+  const { state } = useOperations();
+  const [mobile, setMobile] = useState(false),
+    [search, setSearch] = useState(false),
+    [query, setQuery] = useState("");
+  const title =
+    groups
+      .flatMap((g) => [...g.items])
+      .find((n) => n.to === path.replace(/\/$/, "") || n.to === path)?.label ||
+    "Mesa de conferência";
+  const term = query.trim().toLowerCase();
+  const results = term
+    ? state.notes
+        .filter((n) =>
+          [n.nf, n.pedido, n.destinatario, n.conferencia].join(" ").toLowerCase().includes(term),
+        )
+        .slice(0, 8)
+    : [];
+  const operations = term
+    ? state.operations
+        .filter((o) => [o.id, o.placa, o.origem].join(" ").toLowerCase().includes(term))
+        .slice(0, 4)
+    : [];
   const sidebar = (
-    <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
-      <div className="flex h-14 items-center gap-2.5 border-b border-sidebar-border px-4">
-        <div className="grid size-8 place-items-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
-          <Truck className="size-4" />
+    <>
+      <Link to="/" className="brand" onClick={() => setMobile(false)}>
+        <span className="brand-symbol">
+          <Box size={23} />
+        </span>
+        <span>
+          <strong>
+            LUFT<span className="brand-divider">/</span>POA
+          </strong>
+          <small>CONFERÊNCIA LOGÍSTICA</small>
+        </span>
+      </Link>
+      <div className="branch">
+        <Building2 size={17} />
+        <div>
+          <span>Porto Alegre</span>
+          <small>Unidade operacional · RS</small>
         </div>
-        <div className="leading-tight">
-          <div className="text-sm font-semibold text-sidebar-accent-foreground">Conferência</div>
-          <div className="text-[11px] uppercase tracking-wider text-sidebar-muted">Gestão operacional</div>
-        </div>
+        <span className="branch-dot" />
       </div>
-      <div className="px-3 pt-4">
-        <button className="flex w-full items-center justify-between rounded-sm border border-sidebar-border px-3 py-2 text-left text-sm">
-          <span>
-            <span className="block text-[11px] uppercase tracking-wider text-sidebar-muted">Filial</span>
-            Porto Alegre — POA
-          </span>
-          <ChevronDown className="size-4 text-sidebar-muted" />
-        </button>
-      </div>
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
-        {nav.map((n) => (
-          <Link
-            key={n.to}
-            to={n.to}
-            onClick={() => setOpen(false)}
-            className={cn(
-              "relative flex items-center gap-3 rounded-sm px-3 py-2 text-sm transition-colors hover:bg-sidebar-accent",
-              isActive(n.to) && "bg-sidebar-accent font-medium text-sidebar-accent-foreground before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-primary",
-            )}
-          >
-            <n.icon className="size-4 shrink-0 opacity-80" />
-            <span className="truncate">{n.label}</span>
-          </Link>
+      <nav className="nav-groups" aria-label="Navegação principal">
+        {groups.map((g) => (
+          <div key={g.label}>
+            <p className="nav-heading">{g.label}</p>
+            {g.items.map((n) => (
+              <Link
+                key={n.to}
+                to={n.to}
+                onClick={() => setMobile(false)}
+                className={cn(
+                  "nav-item",
+                  (n.to === "/" ? path === "/" : path.startsWith(n.to)) && "active",
+                )}
+              >
+                <n.icon size={17} />
+                <span>{n.label}</span>
+                {n.to === "/pendencias" && (
+                  <span className="nav-count">
+                    {
+                      state.cases.filter((c) => !["resolvida", "cancelada"].includes(c.status))
+                        .length
+                    }
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
         ))}
       </nav>
-      <div className="border-t border-sidebar-border px-4 py-3 text-[11px] text-sidebar-muted">
-        Ambiente de demonstração · dados fictícios
-      </div>
-    </aside>
-  );
-
-  return (
-    <div className="flex min-h-screen w-full">
-      <div className="sticky top-0 hidden h-screen lg:block">{sidebar}</div>
-      {open && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-foreground/40" onClick={() => setOpen(false)} />
-          <div className="relative h-full w-64">{sidebar}</div>
+      <div className="sidebar-footer">
+        <span className="avatar">AP</span>
+        <div>
+          <strong>Ana P.</strong>
+          <small>Perfil de demonstração</small>
         </div>
-      )}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-card px-4 lg:px-6">
-          <button className="rounded-sm p-1.5 hover:bg-muted lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
-          <div className="text-sm font-medium text-muted-foreground">
-            POA <span className="mx-1.5 text-border">/</span>
-            <span className="text-foreground">{title}</span>
-          </div>
-          <div className="relative ml-auto hidden w-full max-w-sm md:block">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input placeholder="Buscar NF, pedido, placa, ocorrência…" className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring/30" />
-          </div>
-          <div className="flex items-center gap-2.5 border-l pl-3">
-            <div className="grid size-8 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">AP</div>
-            <div className="hidden leading-tight sm:block">
-              <div className="text-sm font-medium">Ana P.</div>
-              <div className="text-xs text-muted-foreground">Administrativo</div>
-            </div>
-          </div>
-        </header>
-        <main className="flex-1 px-4 py-6 lg:px-8">{children}</main>
+        <span className="demo-dot" />
       </div>
+    </>
+  );
+  return (
+    <div className="app-layout">
+      <a href="#main" className="skip-link">
+        Ir para o conteúdo
+      </a>
+      <aside className="desktop-sidebar">{sidebar}</aside>
+      <Dialog open={mobile} onOpenChange={setMobile}>
+        <DialogContent className="mobile-sidebar">
+          <DialogTitle className="sr-only">Navegação</DialogTitle>
+          <DialogDescription className="sr-only">Módulos da operação POA</DialogDescription>
+          {sidebar}
+        </DialogContent>
+      </Dialog>
+      <div className="app-content">
+        <header className="topbar">
+          <button
+            className="icon-button mobile-menu"
+            onClick={() => setMobile(true)}
+            aria-label="Abrir navegação"
+          >
+            <Menu size={20} />
+          </button>
+          <div className="breadcrumb">
+            Operação POA <ChevronRight size={14} />
+            <strong>{title}</strong>
+          </div>
+          <button
+            className="global-search"
+            aria-label="Buscar NF, pedido ou placa"
+            onClick={() => setSearch(true)}
+          >
+            <Search size={16} />
+            <span>Buscar NF, pedido ou placa</span>
+          </button>
+          <span className="topbar-label">Uso interno</span>
+        </header>
+        <div className="demo-banner">
+          <span className="demo-label">DEMONSTRAÇÃO</span>
+          <span>
+            Dados fictícios · alterações mantidas apenas enquanto esta página estiver aberta.
+          </span>
+          <Link to="/configuracoes">
+            Sobre este ambiente <ArrowUpRight size={13} />
+          </Link>
+        </div>
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
+        <footer className="page-footer">
+          <span>Luft · Conferência logística</span>
+          <span>Filial POA · Ambiente de avaliação</span>
+        </footer>
+      </div>
+      <Dialog open={search} onOpenChange={setSearch}>
+        <DialogContent>
+          <DialogTitle>Busca operacional</DialogTitle>
+          <DialogDescription>
+            Localize a nota ou a operação. A mesma NF pode existir em operações diferentes.
+          </DialogDescription>
+          <label className="sr-only" htmlFor="global-search">
+            Buscar
+          </label>
+          <input
+            id="global-search"
+            autoFocus
+            className="field"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="NF, pedido, cliente, operação ou placa"
+          />
+          <div className="search-results">
+            {operations.map((o) => (
+              <button
+                key={o.id}
+                onClick={() => {
+                  setSearch(false);
+                  navigate({ to: "/conferencias/$id", params: { id: o.id } });
+                }}
+              >
+                <ClipboardCheck size={18} />
+                <span>
+                  <strong>{o.id}</strong>
+                  <small>
+                    {o.placa} · {o.origem}
+                  </small>
+                </span>
+                <ChevronRight size={16} />
+              </button>
+            ))}
+            {results.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => {
+                  setSearch(false);
+                  navigate({
+                    to: "/conferencias/$id",
+                    params: { id: n.conferencia },
+                    search: { nota: n.id },
+                  });
+                }}
+              >
+                <FileText size={18} />
+                <span>
+                  <strong>NF {n.nf}</strong>
+                  <small>
+                    {n.destinatario} · {n.conferencia}
+                  </small>
+                </span>
+                <ChevronRight size={16} />
+              </button>
+            ))}
+            {term && !results.length && !operations.length && (
+              <p className="muted py-6">Nenhum resultado. Confira os números ou tente a placa.</p>
+            )}
+            {!term && (
+              <p className="muted py-6">Comece digitando para consultar a base de demonstração.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

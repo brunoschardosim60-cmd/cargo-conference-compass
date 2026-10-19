@@ -1,0 +1,10 @@
+.git
+.lovable
+.wrangler
+.output
+.tanstack
+node_modules
+docs
+src/test
+*.log
+.env*

@@ -13,7 +13,12 @@ const toneCls: Record<Tone, string> = {
 
 export function Pill({ tone, children }: { tone: Tone; children: React.ReactNode }) {
   return (
-    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-0.5 text-xs font-medium", toneCls[tone])}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-0.5 text-xs font-medium",
+        toneCls[tone],
+      )}
+    >
       <span className="size-1.5 rounded-full bg-current" />
       {children}
     </span>
@@ -29,10 +34,10 @@ export const confMap: Record<ConfStatus, [string, Tone]> = {
 export const nfMap: Record<NfStatus, [string, Tone]> = {
   pendente: ["Não conferida", "neutral"],
   conferida: ["Conferida", "success"],
-  falta: ["Falta de volumes", "danger"],
+  falta: ["Falta confirmada", "danger"],
   avaria: ["Avaria", "danger"],
   excedente: ["Excedente", "warning"],
-  divergencia: ["Divergência de identificação", "warning"],
+  divergencia: ["Não identificado / divergência", "warning"],
   localizacao: ["Pendente de localização", "warning"],
 };
 export const ocMap: Record<OcStatus, [string, Tone]> = {
@@ -52,7 +57,13 @@ export const extMap: Record<ExtStatus, [string, Tone]> = {
   confirmacao_pendente: ["Confirmação pendente", "warning"],
 };
 
-export function StatusPill<K extends string>({ map, value }: { map: Record<K, [string, Tone]>; value: K }) {
+export function StatusPill<K extends string>({
+  map,
+  value,
+}: {
+  map: Record<K, [string, Tone]>;
+  value: K;
+}) {
   const [label, tone] = map[value];
   return <Pill tone={tone}>{label}</Pill>;
 }

@@ -1,142 +1,485 @@
+import { meta } from "@/lib/meta";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { ArrowLeft, Save, CheckCheck, Check } from "lucide-react";
-import { Panel, SearchBox, FilterSelect, Btn, NotConnected, Mono, EmptyState } from "@/components/ui-kit";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, CheckCheck, Pause, Play, Check, ArrowRight, Save, Info } from "lucide-react";
+import { toast } from "sonner";
+import {
+  PageHeader,
+  Panel,
+  DataTable,
+  SearchBox,
+  FilterSelect,
+  Btn,
+  EmptyState,
+} from "@/components/ui-kit";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { StatusPill, confMap, nfMap } from "@/components/status";
-import { conferencias, notas as allNotas, type NfStatus, type NotaFiscal } from "@/lib/demo-data";
+import { useOperations } from "@/lib/operation-context";
+import { canFinish, needsCount, noteError, type Note, type NoteInput } from "@/lib/operation-model";
+import type { NfStatus } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
-
+import { UnsavedChanges } from "@/components/unsaved-changes";
 export const Route = createFileRoute("/conferencias/$id")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Conferência ${params.id} · Conferência POA` },
-      { name: "description", content: `Conferência física das notas fiscais da operação ${params.id}.` },
-      { property: "og:title", content: `Conferência ${params.id}` },
-      { property: "og:description", content: "Registro de volumes, faltas, avarias e divergências por NF." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  validateSearch: (s: Record<string, unknown>): { nota?: string } =>
+    typeof s["nota"] === "string" ? { nota: s["nota"] } : {},
+  head: () => meta("Mesa de conferência", "Conferência logística interna da filial POA."),
   component: Page,
 });
-
-const options: NfStatus[] = ["conferida", "falta", "avaria", "excedente", "divergencia", "localizacao"];
-
 function Page() {
   const { id } = Route.useParams();
-  const conf = conferencias.find((c) => c.id === id) ?? conferencias[0]!;
-  const [rows, setRows] = useState<NotaFiscal[]>(() => allNotas.filter((n) => n.conferencia === conf.id));
-  const [q, setQ] = useState("");
-  const [st, setSt] = useState("");
-  const [sel, setSel] = useState<string | null>(rows.find((r) => r.status === "pendente")?.nf ?? rows[0]?.nf ?? null);
-  const [saved, setSaved] = useState(false);
-
-  const filtered = useMemo(() => rows.filter((n) => (!st || n.status === st) &&
-    [n.nf, n.pedido, n.remetente, n.destinatario].join(" ").toLowerCase().includes(q.toLowerCase())), [rows, q, st]);
-  const current = rows.find((r) => r.nf === sel);
-  const done = rows.filter((r) => r.status !== "pendente").length;
-
-  const update = (patch: Partial<NotaFiscal>) => {
-    setSaved(false);
-    setRows((rs) => rs.map((r) => (r.nf === sel ? { ...r, ...patch, registradoPor: "Ana P.", registradoEm: "agora" } : r)));
-  };
-
+  const { nota } = Route.useSearch();
+  return <Workbench key={id + (nota || "")} id={id} initialNote={nota} />;
+}
+function Workbench({ id, initialNote }: { id: string; initialNote: string | undefined }) {
+  const { state, changeOperation } = useOperations();
+  const conf = state.operations.find((o) => o.id === id),
+    rows = state.notes.filter((n) => n.conferencia === id);
+  const [q, setQ] = useState(""),
+    [filter, setFilter] = useState(""),
+    [selected, setSelected] = useState(
+      rows.find((n) => n.id === initialNote)?.id || rows.find(needsCount)?.id || rows[0]?.id || "",
+    ),
+    [finish, setFinish] = useState(false);
+  const [dirty, setDirty] = useState(false),
+    [pendingSelection, setPendingSelection] = useState("");
+  function selectNote(noteId: string) {
+    if (noteId === selected) return;
+    if (dirty) setPendingSelection(noteId);
+    else setSelected(noteId);
+  }
+  const current = rows.find((n) => n.id === selected),
+    done = rows.filter((n) => !needsCount(n)).length;
+  const list = rows.filter(
+    (n) =>
+      (!filter || n.status === filter) &&
+      [n.nf, n.pedido, n.destinatario, n.pallet, n.praca]
+        .join(" ")
+        .toLowerCase()
+        .includes(q.toLowerCase()),
+  );
+  if (!conf)
+    return (
+      <Panel>
+        <EmptyState
+          title="Operação não encontrada"
+          text="Este identificador não corresponde a uma operação disponível. Nenhuma outra carga foi aberta em seu lugar."
+        />
+        <Link to="/conferencias" className="table-link">
+          <ArrowLeft size={14} />
+          Voltar às conferências
+        </Link>
+      </Panel>
+    );
+  function next(saved = false) {
+    const nextRow = rows.find((n) => n.id !== selected && needsCount(n));
+    if (nextRow) {
+      if (saved) {
+        setDirty(false);
+        setSelected(nextRow.id);
+      } else selectNote(nextRow.id);
+      setQ("");
+      setFilter("");
+    } else toast.info("Não há outras notas pendentes de conferência.");
+  }
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
-      <Link to="/conferencias" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" />Conferências</Link>
-
-      <div className="flex flex-wrap items-start justify-between gap-4 rounded-md border bg-card p-4">
-        <div>
-          <div className="flex items-center gap-3"><h1 className="font-mono text-lg font-semibold">{conf.id}</h1><StatusPill map={confMap} value={conf.status} /></div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {conf.origem} · placa <Mono>{conf.placa}</Mono> · {conf.motorista} · doca {conf.doca ?? "—"} · chegada {conf.chegada}
-          </p>
+    <>
+      <Link to="/conferencias" className="table-link mb-5">
+        <ArrowLeft size={14} />
+        Operações de recebimento
+      </Link>
+      <PageHeader
+        title="Mesa de conferência"
+        subtitle={conf.id + " · registre a contagem física de cada nota fiscal."}
+        actions={
+          <>
+            {conf.status === "em_andamento" ? (
+              <Btn
+                variant="outline"
+                disabled={dirty}
+                title={dirty ? "Salve a contagem antes de pausar." : undefined}
+                onClick={() => {
+                  changeOperation(id, "pausada");
+                  toast.success("Conferência pausada. Registros mantidos nesta sessão.");
+                }}
+              >
+                <Pause size={14} />
+                Pausar
+              </Btn>
+            ) : (
+              conf.status !== "concluida" && (
+                <Btn onClick={() => changeOperation(id, "em_andamento")}>
+                  <Play size={14} />
+                  {conf.status === "pausada" ? "Retomar conferência" : "Iniciar conferência"}
+                </Btn>
+              )
+            )}
+            {conf.status === "em_andamento" && (
+              <Btn onClick={() => setFinish(true)} disabled={!canFinish(state, id) || dirty}>
+                <CheckCheck size={15} />
+                Finalizar conferência
+              </Btn>
+            )}
+          </>
+        }
+      />
+      <div className="operation-context">
+        <div className="context-item">
+          <small>Origem → destino</small>
+          <strong>{conf.origem} → POA</strong>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="text-right"><div className="text-xs text-muted-foreground">NFs registradas</div><div className="text-lg font-semibold tabular">{done} / {rows.length}</div></div>
-          <Btn variant="outline" onClick={() => setSaved(true)}><Save className="size-4" />{saved ? "Salvo (demo)" : "Salvar parcial"}</Btn>
-          <Btn disabled={done < rows.length}><CheckCheck className="size-4" />Concluir</Btn>
+        <div className="context-item">
+          <small>Veículo / doca</small>
+          <strong className="font-mono">
+            {conf.placa} / {conf.doca || "Não informada"}
+          </strong>
+        </div>
+        <div className="context-item">
+          <small>Motorista</small>
+          <strong>{conf.motorista}</strong>
+        </div>
+        <div className="context-item">
+          <small>Responsável</small>
+          <strong>{conf.responsavel}</strong>
+        </div>
+        <div className="context-item">
+          <small>Chegada</small>
+          <strong>{conf.chegada}</strong>
+        </div>
+        <div className="ml-auto">
+          <StatusPill map={confMap} value={conf.status} />
         </div>
       </div>
-
-      <NotConnected>As alterações nesta tela ficam só nesta sessão de demonstração e não são gravadas.</NotConnected>
-
-      <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            <SearchBox placeholder="NF, pedido, cliente ou destinatário" value={q} onChange={setQ} />
-            <FilterSelect label="Situação" value={st} onChange={setSt} options={Object.entries(nfMap).map(([k, v]) => [k, v[0]])} />
+      <div className="workbench">
+        <div>
+          <div className="toolbar">
+            <SearchBox
+              placeholder="Buscar NF, pedido, cliente ou pallet"
+              value={q}
+              onChange={setQ}
+            />
+            <FilterSelect
+              label="Situação"
+              options={Object.entries(nfMap).map(([k, v]) => [k, v[0]])}
+              value={filter}
+              onChange={setFilter}
+            />
           </div>
-          <Panel flush>
-            {filtered.length === 0 ? <EmptyState title="Nenhuma NF encontrada" text="Verifique o número digitado ou limpe os filtros." /> : (
-              <ul className="divide-y">
-                {filtered.map((n) => (
-                  <li key={n.nf}>
-                    <button onClick={() => setSel(n.nf)} className={cn("grid w-full grid-cols-[1fr_auto] items-center gap-3 px-4 py-3 text-left hover:bg-muted/40", sel === n.nf && "bg-accent")}>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2"><Mono>NF {n.nf}</Mono><span className="text-xs text-muted-foreground">{n.pallet} · {n.praca}</span></div>
-                        <div className="truncate text-sm text-muted-foreground">{n.destinatario}</div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="text-sm tabular"><span className="font-semibold">{n.encontrados ?? "—"}</span><span className="text-muted-foreground"> / {n.previstos} vol</span></span>
+          <Panel
+            title="Relação da carga"
+            actions={
+              <span className="muted">
+                {done} de {rows.length} NFs verificadas
+              </span>
+            }
+            flush
+          >
+            <div className="note-table">
+              {!list.length ? (
+                <EmptyState
+                  title="Nenhuma nota nesta busca"
+                  text="Limpe o filtro ou confira o número da NF ou do pedido."
+                />
+              ) : (
+                <DataTable head={["Nota / destinatário", "Praça / pallet", "Volumes", "Situação"]}>
+                  {list.map((n) => (
+                    <tr key={n.id} className={cn(selected === n.id && "note-selected")}>
+                      <td>
+                        <button
+                          onClick={() => selectNote(n.id)}
+                          className="cell-primary"
+                          aria-pressed={selected === n.id}
+                        >
+                          NF {n.nf}
+                        </button>
+                        <div className="cell-sub">{n.destinatario}</div>
+                        <div className="cell-sub">Pedido {n.pedido || "não informado"}</div>
+                      </td>
+                      <td>
+                        <span className="text-xs">{n.praca || "Não informada"}</span>
+                        <div className="cell-sub">{n.pallet || "Sem pallet"}</div>
+                      </td>
+                      <td>
+                        <span className="font-medium">{n.encontrados ?? "—"}</span>
+                        <span className="text-muted-foreground"> / {n.previstos}</span>
+                        <div className="cell-sub">encontrados / previstos</div>
+                      </td>
+                      <td>
                         <StatusPill map={nfMap} value={n.status} />
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      </td>
+                    </tr>
+                  ))}
+                </DataTable>
+              )}
+            </div>
+            <div className="table-footer">
+              <span>{list.length} notas na relação filtrada</span>
+              <span>{rows.reduce((a, n) => a + n.previstos, 0)} volumes previstos</span>
+            </div>
           </Panel>
+          <div className="info-strip mt-4">
+            <Info size={16} className="shrink-0 mt-0.5" />
+            <span>
+              Um volume não localizado ainda pode estar no pavilhão. Use{" "}
+              <strong>pendente de localização</strong> até a falta ser confirmada.
+            </span>
+          </div>
+          {conf.iniciadaEm && (
+            <p className="muted mt-4">Início da conferência: {conf.iniciadaEm}</p>
+          )}
+          {conf.concluidaEm && (
+            <p className="muted mt-4">
+              Finalizada em {conf.concluidaEm} · divergências seguem disponíveis no administrativo.
+            </p>
+          )}
         </div>
-
-        {current && (
-          <Panel title={`NF ${current.nf}`} className="h-fit lg:sticky lg:top-20">
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <dt className="text-muted-foreground">Pedido</dt><dd><Mono>{current.pedido}</Mono></dd>
-              <dt className="text-muted-foreground">Remetente</dt><dd>{current.remetente}</dd>
-              <dt className="text-muted-foreground">Destinatário</dt><dd>{current.destinatario}</dd>
-              <dt className="text-muted-foreground">Praça</dt><dd>{current.praca}</dd>
-              <dt className="text-muted-foreground">Peso</dt><dd className="tabular">{current.peso.toFixed(1)} kg</dd>
-            </dl>
-
-            <div className="mt-5 grid grid-cols-3 gap-2">
-              <Num label="Previstos" value={current.previstos} />
-              <label className="rounded-md border p-2.5">
-                <span className="block text-xs text-muted-foreground">Encontrados</span>
-                <input type="number" min={0} value={current.encontrados ?? ""} onChange={(e) => update({ encontrados: e.target.value === "" ? null : Number(e.target.value) })}
-                  className="w-full bg-transparent text-xl font-semibold tabular outline-none" placeholder="—" />
-              </label>
-              <Num label="Diferença" value={current.encontrados == null ? "—" : current.encontrados - current.previstos}
-                tone={current.encontrados == null ? "" : current.encontrados < current.previstos ? "text-danger" : current.encontrados > current.previstos ? "text-warning" : "text-success"} />
-            </div>
-
-            <div className="mt-5">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Registrar situação</span>
-              <div className="mt-2 grid grid-cols-2 gap-1.5">
-                {options.map((o) => (
-                  <button key={o} onClick={() => update({ status: o })}
-                    className={cn("flex items-center gap-1.5 rounded-md border px-2.5 py-2 text-left text-xs font-medium hover:bg-muted", current.status === o && "border-primary bg-accent")}>
-                    {current.status === o && <Check className="size-3.5" />}{nfMap[o][0]}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">NF não encontrada fica como “pendente de localização” — não é tratada automaticamente como extravio ou falta definitiva.</p>
-            </div>
-            {current.registradoPor && (
-              <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">Último registro: {current.registradoPor} · {current.registradoEm}</p>
-            )}
+        {current ? (
+          <NoteEditor
+            key={current.id}
+            note={current}
+            editable={conf.status === "em_andamento"}
+            onNext={next}
+            onDirty={setDirty}
+          />
+        ) : (
+          <Panel>
+            <EmptyState
+              title="Relação vazia"
+              text="Esta operação ainda não tem notas disponíveis."
+            />
           </Panel>
         )}
       </div>
-    </div>
+      <Dialog
+        open={!!pendingSelection}
+        onOpenChange={(v) => {
+          if (!v) setPendingSelection("");
+        }}
+      >
+        <DialogContent>
+          <DialogTitle>Há uma contagem não salva</DialogTitle>
+          <DialogDescription>
+            Salve o registro antes de mudar de nota ou descarte o rascunho.
+          </DialogDescription>
+          <div className="flex justify-end gap-2">
+            <Btn variant="outline" onClick={() => setPendingSelection("")}>
+              Voltar e salvar
+            </Btn>
+            <Btn
+              onClick={() => {
+                setSelected(pendingSelection);
+                setPendingSelection("");
+                setDirty(false);
+              }}
+            >
+              Descartar e abrir nota
+            </Btn>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={finish} onOpenChange={setFinish}>
+        <DialogContent>
+          <DialogTitle>Finalizar esta conferência?</DialogTitle>
+          <DialogDescription>
+            A contagem ficará em consulta. As divergências permanecem abertas para análise
+            administrativa.
+          </DialogDescription>
+          <div className="info-strip">
+            {done} notas verificadas · {rows.filter((n) => n.status !== "conferida").length} com
+            divergência ou localização pendente.
+          </div>
+          <p className="muted">
+            Esta ação será registrada somente na sessão de demonstração. Nenhuma ocorrência oficial
+            será lançada.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Btn variant="outline" onClick={() => setFinish(false)}>
+              Continuar conferindo
+            </Btn>
+            <Btn
+              onClick={() => {
+                changeOperation(id, "concluida");
+                setFinish(false);
+                toast.success("Conferência finalizada nesta sessão.");
+              }}
+            >
+              Confirmar finalização
+            </Btn>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
-
-function Num({ label, value, tone = "" }: { label: string; value: number | string; tone?: string }) {
+function NoteEditor({
+  note,
+  editable,
+  onNext,
+  onDirty,
+}: {
+  note: Note;
+  editable: boolean;
+  onNext: (saved?: boolean) => void;
+  onDirty: (dirty: boolean) => void;
+}) {
+  const { record } = useOperations();
+  const [quantity, setQuantity] = useState(
+      note.encontrados === null ? "" : String(note.encontrados),
+    ),
+    [status, setStatus] = useState<NfStatus>(note.status),
+    [observation, setObservation] = useState(note.observacao),
+    [error, setError] = useState("");
+  const countRef = useRef<HTMLInputElement>(null);
+  const delta = quantity === "" ? null : Number(quantity) - note.previstos;
+  const dirty =
+    quantity !== (note.encontrados === null ? "" : String(note.encontrados)) ||
+    status !== note.status ||
+    observation !== note.observacao;
+  useEffect(() => {
+    onDirty(dirty);
+  }, [dirty, onDirty]);
+  useEffect(() => {
+    if (editable) countRef.current?.focus({ preventScroll: true });
+  }, [editable]);
+  function save(advance: boolean) {
+    const input: NoteInput = {
+      encontrados: quantity === "" ? NaN : Number(quantity),
+      status,
+      observacao: observation,
+    };
+    const issue = noteError(input, note.previstos);
+    setError(issue);
+    if (issue) return;
+    record(note.id, input);
+    toast.success("NF " + note.nf + " registrada na sessão.");
+    if (advance) onNext(true);
+  }
+  const options: [NfStatus, string][] = [
+    ["conferida", "Sem divergência"],
+    ["localizacao", "A localizar"],
+    ["falta", "Falta confirmada"],
+    ["avaria", "Avaria"],
+    ["excedente", "Excedente"],
+    ["divergencia", "Não identificado"],
+  ];
   return (
-    <div className="rounded-md border bg-muted/40 p-2.5">
-      <span className="block text-xs text-muted-foreground">{label}</span>
-      <span className={cn("text-xl font-semibold tabular", tone)}>{typeof value === "number" && value > 0 && label === "Diferença" ? `+${value}` : value}</span>
-    </div>
+    <section className="panel note-editor">
+      <UnsavedChanges dirty={dirty} />
+      <header className="editor-header">
+        <div className="eyebrow !mb-1">REGISTRO DA CONTAGEM</div>
+        <h2>NF {note.nf}</h2>
+        <p className="muted">{note.destinatario}</p>
+      </header>
+      <div className="editor-body">
+        <div className="flex justify-between">
+          <span className="muted">Pedido {note.pedido || "não informado"}</span>
+          <span className="muted">{note.pallet || "Sem pallet"}</span>
+        </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            save(true);
+          }}
+        >
+          <fieldset disabled={!editable}>
+            <legend className="sr-only">Resultado da nota {note.nf}</legend>
+            <div className="quantity-grid">
+              <div>
+                <small>PREVISTOS</small>
+                <strong>{note.previstos}</strong>
+              </div>
+              <label>
+                <small>ENCONTRADOS</small>
+                <input
+                  ref={countRef}
+                  aria-label="Volumes encontrados"
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="0"
+                />
+              </label>
+              <div>
+                <small>DIFERENÇA</small>
+                <strong
+                  className={
+                    delta === null
+                      ? ""
+                      : delta < 0
+                        ? "text-danger"
+                        : delta > 0
+                          ? "text-warning"
+                          : "text-success"
+                  }
+                >
+                  {delta === null ? "—" : delta > 0 ? "+" + delta : delta}
+                </strong>
+              </div>
+            </div>
+            <span className="field-label">Resultado da conferência</span>
+            <div className="result-options">
+              {options.map(([v, l]) => (
+                <label className="result-option" key={v}>
+                  <input
+                    name="result"
+                    type="radio"
+                    value={v}
+                    checked={status === v}
+                    onChange={() => setStatus(v)}
+                  />
+                  {l}
+                </label>
+              ))}
+            </div>
+            <label className="field-group">
+              <span>
+                Observações {status !== "conferida" ? "· obrigatórias nas divergências" : ""}
+              </span>
+              <textarea
+                rows={3}
+                maxLength={2000}
+                value={observation}
+                onChange={(e) => setObservation(e.target.value)}
+                className="field"
+                placeholder="Descreva a condição, a localização ou a avaria…"
+              />
+            </label>
+            {error && (
+              <p role="alert" className="error-text">
+                {error}
+              </p>
+            )}
+            <div className="editor-actions">
+              <Btn variant="outline" onClick={() => save(false)}>
+                <Save size={14} />
+                Salvar
+              </Btn>
+              <Btn type="submit">
+                <Check size={14} />
+                Salvar e próxima
+              </Btn>
+            </div>
+          </fieldset>
+        </form>
+        {!editable && (
+          <div className="info-strip mt-4">
+            {note.status === "pendente"
+              ? "Inicie ou retome a conferência para registrar esta nota."
+              : "Registro em consulta. A operação deve estar em andamento para editar."}
+          </div>
+        )}
+        <p aria-live="polite" className="text-[10px] text-muted-foreground mt-4">
+          {dirty
+            ? "Rascunho não salvo · salve antes de selecionar outra nota."
+            : note.registradoPor
+              ? "Último registro: " + note.registradoPor + " · " + note.registradoEm
+              : "Aguardando contagem física."}
+        </p>
+        <button onClick={() => onNext()} className="table-link mt-3">
+          Próxima nota pendente <ArrowRight size={13} />
+        </button>
+      </div>
+    </section>
   );
 }
