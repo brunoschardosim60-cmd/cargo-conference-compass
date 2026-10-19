@@ -10,7 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
+import { Route as ExtraviadosRouteImport } from './routes/extraviados'
+import { Route as HistoricoRouteImport } from './routes/historico'
+import { Route as NotasRouteImport } from './routes/notas'
+import { Route as OcorrenciasRouteImport } from './routes/ocorrencias'
 import { Route as PendenciasRouteImport } from './routes/pendencias'
+import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ConferenciasIndexRouteImport } from './routes/conferencias.index'
 import { Route as ConferenciasIdRouteImport } from './routes/conferencias.$id'
 
@@ -19,9 +25,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExtraviadosRoute = ExtraviadosRouteImport.update({
+  id: '/extraviados',
+  path: '/extraviados',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoricoRoute = HistoricoRouteImport.update({
+  id: '/historico',
+  path: '/historico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotasRoute = NotasRouteImport.update({
+  id: '/notas',
+  path: '/notas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OcorrenciasRoute = OcorrenciasRouteImport.update({
+  id: '/ocorrencias',
+  path: '/ocorrencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PendenciasRoute = PendenciasRouteImport.update({
   id: '/pendencias',
   path: '/pendencias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UsuariosRoute = UsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConferenciasIndexRoute = ConferenciasIndexRouteImport.update({
@@ -37,34 +73,89 @@ const ConferenciasIdRoute = ConferenciasIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/extraviados': typeof ExtraviadosRoute
+  '/historico': typeof HistoricoRoute
+  '/notas': typeof NotasRoute
+  '/ocorrencias': typeof OcorrenciasRoute
   '/pendencias': typeof PendenciasRoute
+  '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
   '/conferencias/': typeof ConferenciasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/extraviados': typeof ExtraviadosRoute
+  '/historico': typeof HistoricoRoute
+  '/notas': typeof NotasRoute
+  '/ocorrencias': typeof OcorrenciasRoute
   '/pendencias': typeof PendenciasRoute
+  '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
   '/conferencias': typeof ConferenciasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/configuracoes': typeof ConfiguracoesRoute
+  '/extraviados': typeof ExtraviadosRoute
+  '/historico': typeof HistoricoRoute
+  '/notas': typeof NotasRoute
+  '/ocorrencias': typeof OcorrenciasRoute
   '/pendencias': typeof PendenciasRoute
+  '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
   '/conferencias/': typeof ConferenciasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/pendencias' | '/conferencias/$id' | '/conferencias/'
+  fullPaths:
+    | '/'
+    | '/configuracoes'
+    | '/extraviados'
+    | '/historico'
+    | '/notas'
+    | '/ocorrencias'
+    | '/pendencias'
+    | '/usuarios'
+    | '/conferencias/$id'
+    | '/conferencias/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/pendencias' | '/conferencias/$id' | '/conferencias'
-  id: '__root__' | '/' | '/pendencias' | '/conferencias/$id' | '/conferencias/'
+  to:
+    | '/'
+    | '/configuracoes'
+    | '/extraviados'
+    | '/historico'
+    | '/notas'
+    | '/ocorrencias'
+    | '/pendencias'
+    | '/usuarios'
+    | '/conferencias/$id'
+    | '/conferencias'
+  id:
+    | '__root__'
+    | '/'
+    | '/configuracoes'
+    | '/extraviados'
+    | '/historico'
+    | '/notas'
+    | '/ocorrencias'
+    | '/pendencias'
+    | '/usuarios'
+    | '/conferencias/$id'
+    | '/conferencias/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
+  ExtraviadosRoute: typeof ExtraviadosRoute
+  HistoricoRoute: typeof HistoricoRoute
+  NotasRoute: typeof NotasRoute
+  OcorrenciasRoute: typeof OcorrenciasRoute
   PendenciasRoute: typeof PendenciasRoute
+  UsuariosRoute: typeof UsuariosRoute
   ConferenciasIdRoute: typeof ConferenciasIdRoute
   ConferenciasIndexRoute: typeof ConferenciasIndexRoute
 }
@@ -78,11 +169,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/extraviados': {
+      id: '/extraviados'
+      path: '/extraviados'
+      fullPath: '/extraviados'
+      preLoaderRoute: typeof ExtraviadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historico': {
+      id: '/historico'
+      path: '/historico'
+      fullPath: '/historico'
+      preLoaderRoute: typeof HistoricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notas': {
+      id: '/notas'
+      path: '/notas'
+      fullPath: '/notas'
+      preLoaderRoute: typeof NotasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ocorrencias': {
+      id: '/ocorrencias'
+      path: '/ocorrencias'
+      fullPath: '/ocorrencias'
+      preLoaderRoute: typeof OcorrenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pendencias': {
       id: '/pendencias'
       path: '/pendencias'
       fullPath: '/pendencias'
       preLoaderRoute: typeof PendenciasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/usuarios': {
+      id: '/usuarios'
+      path: '/usuarios'
+      fullPath: '/usuarios'
+      preLoaderRoute: typeof UsuariosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conferencias/': {
@@ -104,7 +237,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
+  ExtraviadosRoute: ExtraviadosRoute,
+  HistoricoRoute: HistoricoRoute,
+  NotasRoute: NotasRoute,
+  OcorrenciasRoute: OcorrenciasRoute,
   PendenciasRoute: PendenciasRoute,
+  UsuariosRoute: UsuariosRoute,
   ConferenciasIdRoute: ConferenciasIdRoute,
   ConferenciasIndexRoute: ConferenciasIndexRoute,
 }

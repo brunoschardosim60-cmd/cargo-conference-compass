@@ -24,7 +24,7 @@ const options: NfStatus[] = ["conferida", "falta", "avaria", "excedente", "diver
 
 function Page() {
   const { id } = Route.useParams();
-  const conf = conferencias.find((c) => c.id === id) ?? conferencias[0];
+  const conf = conferencias.find((c) => c.id === id) ?? conferencias[0]!;
   const [rows, setRows] = useState<NotaFiscal[]>(() => allNotas.filter((n) => n.conferencia === conf.id));
   const [q, setQ] = useState("");
   const [st, setSt] = useState("");
