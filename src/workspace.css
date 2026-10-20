@@ -1171,3 +1171,244 @@ select {
     font-size: 8px;
   }
 }
+
+/* Readable touch controls for the receiving floor. */
+.field-layout .field-back {
+  min-height: 44px;
+  font-size: 14px;
+}
+.field-layout .field-admin-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+}
+.field-layout .field-demo {
+  font-size: 11px;
+}
+.field-layout .field-load-heading {
+  margin-bottom: 12px;
+}
+.field-layout .field-load-heading h1 {
+  font-size: 27px;
+}
+.field-layout .field-progress span {
+  font-size: 12px;
+}
+.field-layout .field-details summary {
+  min-height: 44px;
+  font-size: 14px;
+}
+.field-layout .field-details dl {
+  font-size: 14px;
+}
+.field-layout .field-section-label {
+  font-size: 11px;
+  margin: 15px 0 10px;
+}
+.field-layout .field-client {
+  min-height: 96px;
+  padding: 14px 4px;
+}
+.field-layout .field-client .field-row-text strong {
+  font-size: 17px;
+}
+.field-layout .field-row-text > span:not(.status-pill) {
+  font-size: 14px;
+}
+.field-layout .field-client .field-row-text small,
+.field-layout .field-client .status-pill {
+  font-size: 13px;
+  white-space: normal;
+}
+.field-layout .relation-line-volumes small {
+  font-size: 10px;
+}
+.field-layout .field-tabs button {
+  font-size: 15px;
+  min-height: 48px;
+}
+.field-layout .field-count .field-group > span,
+.field-layout .field-instruction {
+  font-size: 14px;
+}
+.field-layout .field-primary,
+.field-layout .field-secondary {
+  font-size: 16px;
+  min-height: 52px;
+}
+.field-layout input,
+.field-layout textarea,
+.field-layout select,
+.field-layout .relative > input {
+  font-size: 16px;
+  min-height: 48px;
+}
+.field-layout .count-sheet-meta small {
+  font-size: 11px;
+}
+.field-layout .count-sheet-meta strong {
+  font-size: 15px;
+}
+.field-layout .count-sheet-value {
+  padding: 15px;
+}
+.field-layout .count-sheet-value > div > span {
+  font-size: 16px;
+}
+.field-layout .count-sheet-value > div > small {
+  font-size: 12px;
+}
+.field-layout .count-sheet-meta > div {
+  padding: 10px 15px;
+}
+.field-layout .field-muted {
+  font-size: 11px;
+}
+.field-layout .load-ticket .status-pill {
+  font-size: 12px;
+}
+.field-layout .field-page-heading p {
+  font-size: 14px;
+}
+.field-save-receipt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #e8f3ec;
+  border-left: 3px solid #2b7652;
+  padding: 12px;
+  color: #265c43;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.field-save-receipt svg {
+  flex-shrink: 0;
+}
+.field-previous {
+  padding: 12px;
+  background: #e9eeec;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  margin: 16px 0;
+}
+.field-save-state,
+.field-help {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 12px 0;
+  color: #52646a;
+}
+.field-calculation,
+.audit-calculation {
+  padding: 10px 12px;
+  background: #edf0ed;
+  font: 14px/1.5 var(--font-mono);
+  overflow-wrap: anywhere;
+  margin: 10px 0;
+}
+.calculator-trigger {
+  min-height: 48px;
+  font-size: 15px;
+  gap: 10px;
+  margin: 12px 0;
+}
+.field-layout .calculator-trigger {
+  width: 100%;
+}
+.count-calculator {
+  width: calc(100% - 24px);
+  max-width: 400px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  gap: 12px;
+  padding: 22px 18px 16px;
+  border-radius: 8px;
+}
+.count-calculator h2 {
+  padding-right: 40px;
+  font-size: 21px;
+}
+.count-calculator > button:last-child {
+  width: 44px;
+  height: 44px;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.count-calculator .calculator-expression {
+  font-size: 22px;
+  min-height: 50px;
+}
+.calculator-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #e9eeea;
+  padding: 12px;
+}
+.calculator-result strong {
+  font: 30px var(--font-mono);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.calculator-keys {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.calculator-keys button {
+  min-height: 52px;
+  background: white;
+  border: 1px solid #b9c6c9;
+  font-size: 23px;
+  border-radius: 4px;
+}
+.calculator-keys button:nth-child(4n) {
+  background: #e5ebed;
+}
+.calculator-keys button:nth-child(13),
+.calculator-keys button:nth-child(15) {
+  font-size: 14px;
+}
+.calculator-keys button:active {
+  background: #d4e0e4;
+}
+.calculator-apply {
+  min-height: 50px;
+  font-size: 16px;
+  width: 100%;
+}
+.calculator-hint {
+  font-size: 13px;
+  color: #52646a;
+  line-height: 1.4;
+}
+.case-audit summary {
+  cursor: pointer;
+  font-size: 13px;
+  padding: 8px 0;
+}
+.case-audit li {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.case-audit li strong {
+  font-weight: 500;
+}
+.case-audit li p {
+  margin-top: 7px;
+  line-height: 1.6;
+}
+.field-layout button:focus-visible,
+.field-layout a:focus-visible,
+.count-calculator button:focus-visible {
+  outline: 3px solid #37657e;
+  outline-offset: 3px;
+}

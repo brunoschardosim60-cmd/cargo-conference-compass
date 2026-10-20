@@ -9,25 +9,48 @@ import {
   type Evento,
   type NfStatus,
 } from "./demo-data";
+import { calculateCount } from "./count-calculator";
 
 export type Note = Omit<NotaFiscal, "peso"> & {
   id: string;
   observacao: string;
   peso: number | null;
+  calculo?: string;
 };
 export type Case = Ocorrencia & {
   codigoOficial?: string;
   providencia?: string;
   justificativa?: string;
   data: string;
+  noteId?: string;
+  recebimentoConfirmado?: boolean;
+  registroOriginal?: NoteInput & { previstos: number; usuario: string; quando: string };
 };
 export type Operation = Conferencia & { iniciadaEm?: string; concluidaEm?: string };
-export type State = { operations: Operation[]; notes: Note[]; cases: Case[]; history: Evento[] };
-export type NoteInput = { encontrados: number; status: NfStatus; observacao: string };
+export type State = {
+  operations: Operation[];
+  notes: Note[];
+  cases: Case[];
+  history: (Evento & { notaId?: string })[];
+};
+export type NoteInput = {
+  encontrados: number;
+  status: NfStatus;
+  observacao: string;
+  calculo?: string;
+};
 
 export function noteError(input: NoteInput, previstos: number) {
   if (!Number.isSafeInteger(input.encontrados) || input.encontrados < 0)
     return "Informe uma quantidade inteira, igual ou maior que zero.";
+  if (input.calculo) {
+    try {
+      if (calculateCount(input.calculo) !== input.encontrados)
+        return "A conta não corresponde à quantidade encontrada. Revise a contagem.";
+    } catch {
+      return "Revise a conta usada na calculadora.";
+    }
+  }
   if (input.status === "pendente") return "Selecione o resultado da conferência.";
   if (input.status === "conferida" && input.encontrados !== previstos)
     return "Para marcar sem divergência, a quantidade encontrada deve ser igual à prevista.";
@@ -108,19 +131,23 @@ export function saveNote(
   const operation = state.operations.find((c) => c.id === before.conferencia);
   if (!operation || operation.status !== "em_andamento")
     throw new Error("Inicie ou retome a conferência antes de registrar notas.");
+  const calculo =
+    input.calculo ?? (before.encontrados === input.encontrados ? before.calculo || "" : "");
   if (
     before.encontrados === input.encontrados &&
     before.status === input.status &&
-    before.observacao === input.observacao
+    before.observacao === input.observacao &&
+    (before.calculo || "") === calculo
   )
     return state;
-  const updated = { ...before, ...input, registradoPor: actor, registradoEm: now };
+  const updated = { ...before, ...input, calculo, registradoPor: actor, registradoEm: now };
   const notes = state.notes.map((n) => (n.id === id ? updated : n));
   let cases = state.cases;
   const existing = cases.find(
     (c) =>
       c.conferencia === before.conferencia &&
       c.nf === before.nf &&
+      (!c.noteId || c.noteId === before.id) &&
       !["resolvida", "cancelada"].includes(c.status),
   );
   if (input.status !== "conferida" && !existing) {
@@ -137,6 +164,14 @@ export function saveNote(
         status: "nova",
         proximaAcao: "Analisar divergência registrada no pavilhão",
         comentarios: 0,
+        noteId: before.id,
+        registroOriginal: {
+          ...input,
+          calculo,
+          previstos: before.previstos,
+          usuario: actor,
+          quando: now,
+        },
       },
       ...cases,
     ];
@@ -164,8 +199,9 @@ export function saveNote(
         quando: now,
         usuario: actor,
         tipo: "conferencia",
+        notaId: before.id,
         ref: before.conferencia,
-        descricao: `NF ${before.nf}: ${before.encontrados ?? "não contado"} → ${input.encontrados} volumes; ${before.status} → ${input.status}. Observação anterior: ${before.observacao || "nenhuma"}. Nova observação: ${input.observacao || "nenhuma"}.`,
+        descricao: `NF ${before.nf}: ${before.encontrados ?? "não contado"} → ${input.encontrados} volumes; ${before.status} → ${input.status}. Observação anterior: ${before.observacao || "nenhuma"}. Nova observação: ${input.observacao || "nenhuma"}. Conta anterior: ${before.calculo || "não utilizada"}. Conta atual: ${calculo || "não utilizada"}.`,
       },
       ...state.history,
     ],

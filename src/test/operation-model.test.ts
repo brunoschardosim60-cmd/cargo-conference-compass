@@ -13,6 +13,11 @@ describe("Contagem física e rastreabilidade", () => {
   it("não permite marcar uma quantidade diferente como sem divergência", () => {
     expect(noteError({ encontrados: 9, status: "conferida", observacao: "" }, 10)).not.toBe("");
   });
+  it("rejeita conta que não corresponde à contagem declarada", () => {
+    expect(
+      noteError({ encontrados: 10, status: "conferida", observacao: "", calculo: "4+5" }, 10),
+    ).toContain("não corresponde");
+  });
   it("aceita zero encontrado sem declarar falta definitiva", () => {
     expect(
       noteError(

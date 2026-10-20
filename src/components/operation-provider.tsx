@@ -82,7 +82,7 @@ export function OperationProvider({ children }: { children: ReactNode }) {
             usuario: actor,
             tipo: "tratamento",
             ref: id,
-            descricao: `Tratamento interno: ${before.status} → ${updated.status}. Responsável: ${before.responsavel || "não atribuído"} → ${updated.responsavel || "não atribuído"}. Providência anterior: ${before.providencia || "nenhuma"}. Nova: ${updated.providencia || "nenhuma"}. Referência oficial anterior: ${before.codigoOficial || "não informada"}. Referência oficial informada manualmente: ${updated.codigoOficial || "não informada"}. Justificativa: ${updated.justificativa || "nenhuma"}.`,
+            descricao: `Tratamento interno: ${before.status} → ${updated.status}. Responsável: ${before.responsavel || "não atribuído"} → ${updated.responsavel || "não atribuído"}. Providência anterior: ${before.providencia || "nenhuma"}. Nova: ${updated.providencia || "nenhuma"}. Referência oficial anterior: ${before.codigoOficial || "não informada"}. Referência oficial informada manualmente: ${updated.codigoOficial || "não informada"}. Justificativa: ${updated.justificativa || "nenhuma"}. Verificação do recebimento/resolução: ${updated.recebimentoConfirmado ? "confirmada manualmente" : "não confirmada"}.`,
           },
           ...s.history,
         ],

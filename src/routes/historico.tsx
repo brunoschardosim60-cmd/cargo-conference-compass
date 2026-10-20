@@ -1,7 +1,7 @@
 import { meta } from "@/lib/meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { PageHeader, Panel, SearchBox, FilterSelect, EmptyState } from "@/components/ui-kit";
+import { PageHeader, Panel, SearchBox, FilterSelect, EmptyState, Btn } from "@/components/ui-kit";
 import { useOperations } from "@/lib/operation-context";
 export const Route = createFileRoute("/historico")({
   head: () => meta("Histórico de atividades", "Conferência logística interna da filial POA."),
@@ -22,6 +22,35 @@ function Page() {
       <PageHeader
         title="Histórico de atividades"
         subtitle="Consulte quem registrou, o que mudou e a operação relacionada."
+        actions={
+          <Btn
+            variant="outline"
+            onClick={() => {
+              const blob = new Blob(
+                [
+                  JSON.stringify(
+                    {
+                      ambiente: "DEMONSTRAÇÃO — dados de teste, sem autenticação real",
+                      exportadoEm: new Date().toISOString(),
+                      ...state,
+                    },
+                    null,
+                    2,
+                  ),
+                ],
+                { type: "application/json" },
+              );
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = `poa-registros-teste-${new Date().toISOString().slice(0, 10)}.json`;
+              link.click();
+              setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }}
+          >
+            Baixar registros de teste
+          </Btn>
+        }
       />
       <div className="info-strip mb-5">
         Histórico de demonstração. As alterações realizadas nesta sessão preservam os valores

@@ -222,7 +222,12 @@ function CaseDetail({
   onDirty: (dirty: boolean) => void;
 }) {
   const { state, updateCase } = useOperations();
-  const n = state.notes.find((n) => n.nf === item.nf && n.conferencia === item.conferencia);
+  const n = state.notes.find(
+    (n) =>
+      n.conferencia === item.conferencia && (item.noteId ? n.id === item.noteId : n.nf === item.nf),
+  );
+  const original = item.registroOriginal;
+  const events = state.history.filter((e) => e.ref === item.id || (e.notaId && e.notaId === n?.id));
   const [owner, setOwner] = useState(item.responsavel || ""),
     [status, setStatus] = useState<OcStatus>(item.status),
     [action, setAction] = useState(item.providencia || ""),
@@ -264,6 +269,7 @@ function CaseDetail({
       codigoOficial: code.trim(),
       justificativa: reason,
       proximaAcao: status === "resolvida" ? "Encerrada com justificativa" : action,
+      ...(receipt ? { recebimentoConfirmado: true } : {}),
     });
     setCode(code.trim());
     setReceipt(false);
@@ -286,6 +292,12 @@ function CaseDetail({
     item.registradoPor +
     "\nObservações: " +
     (n?.observacao || "não informadas") +
+    "\nConta da última contagem: " +
+    (n?.calculo || "não utilizada") +
+    "\nRegistro original: " +
+    (original
+      ? `${original.encontrados} de ${original.previstos} volumes; ${nfMap[original.status][0]}; ${original.observacao}`
+      : "não disponível na amostra") +
     "\nProvidência: " +
     (action || "não informada") +
     "\nReferência oficial informada manualmente: " +
@@ -302,11 +314,11 @@ function CaseDetail({
         </div>
       </header>
       <div className="detail-section">
-        <h3>Conferência de origem</h3>
+        <h3>Última contagem da nota</h3>
         <div className="detail-grid">
           <div>
             <small>Conferente</small>
-            <p>{item.registradoPor}</p>
+            <p>{n?.registradoPor || item.registradoPor}</p>
           </div>
           <div>
             <small>Volumes previstos / encontrados</small>
@@ -322,10 +334,21 @@ function CaseDetail({
           </div>
           <div>
             <small>Registrada em</small>
-            <p>{item.registradoEm}</p>
+            <p>{n?.registradoEm || item.registradoEm}</p>
           </div>
         </div>
         <p className="muted mt-3">{n?.observacao || "Sem observação detalhada na amostra."}</p>
+        {n?.calculo && (
+          <p className="audit-calculation">
+            Conta utilizada: {n.calculo} = {n.encontrados}
+          </p>
+        )}
+        {n?.status === "conferida" && !closed && (
+          <p className="info-strip mt-3">
+            A contagem foi corrigida para sem divergência. A pendência aguarda análise e
+            encerramento com justificativa.
+          </p>
+        )}
         <p className="muted mt-2">Evidências: nenhum arquivo disponível nesta demonstração.</p>
         {state.operations.some((o) => o.id === item.conferencia) && (
           <Link
@@ -335,6 +358,29 @@ function CaseDetail({
           >
             Consultar operação <ArrowUpRight size={13} />
           </Link>
+        )}
+      </div>
+      <div className="detail-section">
+        <h3>Registro que abriu a pendência</h3>
+        {original ? (
+          <>
+            <p>
+              {original.encontrados} encontrados / {original.previstos} previstos ·{" "}
+              {nfMap[original.status][0]}
+            </p>
+            <p className="muted mt-2">{original.observacao}</p>
+            {original.calculo && (
+              <p className="audit-calculation">Conta original: {original.calculo}</p>
+            )}
+            <p className="muted mt-2">
+              {original.usuario} · {original.quando}
+            </p>
+          </>
+        ) : (
+          <p className="muted">
+            O registro original não está disponível nesta amostra antiga. Novas pendências preservam
+            a contagem e a observação de abertura.
+          </p>
         )}
       </div>
       <div className="detail-section space-y-3">
@@ -477,6 +523,28 @@ function CaseDetail({
             {item.justificativa || "Não informada no exemplo original."}
           </p>
         )}
+        {item.recebimentoConfirmado && (
+          <p className="info-strip mt-3">
+            Verificação do recebimento ou resolução confirmada manualmente pela torre.
+          </p>
+        )}
+        <details className="mt-4 case-audit">
+          <summary>Histórico desta pendência ({events.length})</summary>
+          {events.length ? (
+            <ol>
+              {events.map((e) => (
+                <li key={e.id}>
+                  <strong>
+                    {e.usuario} · {e.quando}
+                  </strong>
+                  <p>{e.descricao}</p>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="muted mt-2">Nenhuma alteração registrada nesta sessão.</p>
+          )}
+        </details>
         <p className="muted mt-4 flex gap-2 leading-relaxed">
           <AlertTriangle size={14} className="shrink-0" />
           Nenhum e-mail é enviado pela aplicação.

@@ -19,6 +19,7 @@ import { canFinish, needsCount, noteError, type Note, type NoteInput } from "@/l
 import type { NfStatus } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { UnsavedChanges } from "@/components/unsaved-changes";
+import { CountCalculator } from "@/components/count-calculator";
 export const Route = createFileRoute("/conferencias/$id")({
   validateSearch: (s: Record<string, unknown>): { nota?: string } =>
     typeof s["nota"] === "string" ? { nota: s["nota"] } : {},
@@ -329,11 +330,13 @@ function NoteEditor({
     [observation, setObservation] = useState(note.observacao),
     [error, setError] = useState("");
   const countRef = useRef<HTMLInputElement>(null);
+  const [calculation, setCalculation] = useState(note.calculo || "");
   const delta = quantity === "" ? null : Number(quantity) - note.previstos;
   const dirty =
     quantity !== (note.encontrados === null ? "" : String(note.encontrados)) ||
     status !== note.status ||
-    observation !== note.observacao;
+    observation !== note.observacao ||
+    calculation !== (note.calculo || "");
   useEffect(() => {
     onDirty(dirty);
   }, [dirty, onDirty]);
@@ -345,6 +348,7 @@ function NoteEditor({
       encontrados: quantity === "" ? NaN : Number(quantity),
       status,
       observacao: observation,
+      calculo: calculation,
     };
     const issue = noteError(input, note.previstos);
     setError(issue);
@@ -396,7 +400,10 @@ function NoteEditor({
                   min={0}
                   step={1}
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => {
+                    setQuantity(e.target.value);
+                    setCalculation("");
+                  }}
                   placeholder="0"
                 />
               </label>
@@ -417,6 +424,25 @@ function NoteEditor({
                 </strong>
               </div>
             </div>
+            <CountCalculator
+              onApply={(count, expression) => {
+                setQuantity(String(count));
+                setCalculation(expression);
+                if (!["avaria", "divergencia"].includes(status))
+                  setStatus(
+                    count === note.previstos
+                      ? "conferida"
+                      : count > note.previstos
+                        ? "excedente"
+                        : "localizacao",
+                  );
+              }}
+            />
+            {calculation && (
+              <p className="audit-calculation">
+                Conta utilizada: {calculation} = {quantity}
+              </p>
+            )}
             <span className="field-label">Resultado da conferência</span>
             <div className="result-options">
               {options.map(([v, l]) => (

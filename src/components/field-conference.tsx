@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -16,6 +16,7 @@ import type { NfStatus } from "@/lib/demo-data";
 import { Btn, EmptyState, SearchBox } from "./ui-kit";
 import { StatusPill, confMap, nfMap } from "./status";
 import { UnsavedChanges } from "./unsaved-changes";
+import { CountCalculator } from "./count-calculator";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
 
 export function FieldOperations() {
@@ -99,11 +100,23 @@ export function FieldConference({ id }: { id: string }) {
   const [dirty, setDirty] = useState(false);
   const [discard, setDiscard] = useState(false);
   const [finish, setFinish] = useState(false);
+  const [savedMessage, setSavedMessage] = useState("");
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [client, noteId]);
   const operation = state.operations.find((o) => o.id === id);
   const groups = clientGroups(state.notes, id);
   const currentGroup = groups.find((g) => g.name === client);
   const note = currentGroup?.rows.find((n) => n.id === noteId);
   const rows = state.notes.filter((n) => n.conferencia === id);
+  const searchRows = rows.filter((n) =>
+    [n.nf, n.pedido, n.destinatario, n.praca]
+      .join(" ")
+      .toLowerCase()
+      .includes(query.trim().toLowerCase()),
+  );
   const done = rows.filter((n) => !needsCount(n)).length;
   const editable = operation?.status === "em_andamento";
   function back() {
@@ -133,6 +146,12 @@ export function FieldConference({ id }: { id: string }) {
   return (
     <>
       <UnsavedChanges dirty={dirty} />
+      {savedMessage && (
+        <p className="field-save-receipt" role="status">
+          <CheckCircle2 size={20} />
+          {savedMessage}
+        </p>
+      )}
       {client ? (
         <button className="field-back" onClick={back}>
           <ArrowLeft size={17} />
@@ -150,7 +169,9 @@ export function FieldConference({ id }: { id: string }) {
             <span className="load-dock-label">{operation.doca || "SEM DOCA"}</span>
             <span className="load-plate-label">{operation.placa}</span>
           </span>
-          <h1>{note ? `NF ${note.nf}` : client || "Clientes da carga"}</h1>
+          <h1 ref={headingRef} tabIndex={-1}>
+            {note ? `NF ${note.nf}` : client || "Clientes da carga"}
+          </h1>
           {note && <p>{client}</p>}
         </div>
       </div>
@@ -205,6 +226,7 @@ export function FieldConference({ id }: { id: string }) {
           onDirty={setDirty}
           onSaved={() => {
             setDirty(false);
+            setSavedMessage(`NF ${note.nf} salva nesta sessão. Você pode continuar.`);
             const next = currentGroup?.rows.find((n) => n.id !== note.id && needsCount(n));
             setNoteId(next?.id || "");
             if (!next) {
@@ -221,65 +243,101 @@ export function FieldConference({ id }: { id: string }) {
             placeholder={client ? "Buscar NF ou pedido" : "Buscar cliente, NF ou pedido"}
           />
           <div className="field-section-label">
-            {client ? "Toque na nota para conferir" : "Toque no cliente para ver as notas"}
+            {client || query.trim()
+              ? "Toque na nota para conferir"
+              : "Toque no cliente para ver as notas"}
           </div>
           <div className="field-list">
-            {currentGroup
-              ? currentGroup.rows
-                  .filter((n) => [n.nf, n.pedido].join(" ").includes(query.trim()))
-                  .map((n, index) => (
-                    <button className="field-client" key={n.id} onClick={() => setNoteId(n.id)}>
+            {!client && query.trim()
+              ? searchRows.map((n) => (
+                  <button
+                    className="field-client"
+                    key={n.id}
+                    onClick={() => {
+                      setClient(n.destinatario.trim() || "Destinatário não informado");
+                      setNoteId(n.id);
+                      setQuery("");
+                      setSavedMessage("");
+                    }}
+                  >
+                    <span className="field-row-text">
+                      <strong>NF {n.nf}</strong>
+                      <span>{n.destinatario}</span>
+                      <StatusPill map={nfMap} value={n.status} />
+                    </span>
+                    <span className="relation-line-volumes">
+                      <strong>{n.previstos}</strong>
+                      <small>PREVISTOS</small>
+                    </span>
+                    <ChevronRight size={18} />
+                  </button>
+                ))
+              : currentGroup
+                ? currentGroup.rows
+                    .filter((n) => [n.nf, n.pedido].join(" ").includes(query.trim()))
+                    .map((n, index) => (
+                      <button
+                        className="field-client"
+                        key={n.id}
+                        onClick={() => {
+                          setNoteId(n.id);
+                          setSavedMessage("");
+                        }}
+                      >
+                        <span className="relation-line-number">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span className="field-row-text">
+                          <strong>NF {n.nf}</strong>
+                          <span>{n.pedido || "Sem pedido"}</span>
+                          <StatusPill map={nfMap} value={n.status} />
+                        </span>
+                        <span className="relation-line-volumes">
+                          <strong>{n.previstos}</strong>
+                          <small>VOL.</small>
+                        </span>
+                        <ChevronRight size={15} />
+                      </button>
+                    ))
+                : clientGroups(state.notes, id, query).map((g, index) => (
+                    <button
+                      className="field-client"
+                      key={g.name}
+                      onClick={() => {
+                        setClient(g.name);
+                        setQuery("");
+                        setSavedMessage("");
+                      }}
+                    >
                       <span className="relation-line-number">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                       <span className="field-row-text">
-                        <strong>NF {n.nf}</strong>
-                        <span>{n.pedido || "Sem pedido"}</span>
-                        <StatusPill map={nfMap} value={n.status} />
+                        <strong>{g.name}</strong>
+                        <span>
+                          {g.rows.length} {g.rows.length === 1 ? "nota fiscal" : "notas fiscais"}
+                        </span>
+                        <small
+                          className={
+                            g.remaining ? "" : g.issues ? "line-has-issue" : "line-checked"
+                          }
+                        >
+                          {g.remaining
+                            ? `${g.remaining} ${g.remaining === 1 ? "nota para conferir" : "notas para conferir"}`
+                            : g.issues
+                              ? "Conferido · com divergência"
+                              : "Contagem concluída"}
+                        </small>
                       </span>
                       <span className="relation-line-volumes">
-                        <strong>{n.previstos}</strong>
+                        <strong>{g.expected}</strong>
                         <small>VOL.</small>
                       </span>
                       <ChevronRight size={15} />
                     </button>
-                  ))
-              : clientGroups(state.notes, id, query).map((g, index) => (
-                  <button
-                    className="field-client"
-                    key={g.name}
-                    onClick={() => {
-                      setClient(g.name);
-                      setQuery("");
-                    }}
-                  >
-                    <span className="relation-line-number">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="field-row-text">
-                      <strong>{g.name}</strong>
-                      <span>
-                        {g.rows.length} {g.rows.length === 1 ? "nota fiscal" : "notas fiscais"}
-                      </span>
-                      <small
-                        className={g.remaining ? "" : g.issues ? "line-has-issue" : "line-checked"}
-                      >
-                        {g.remaining
-                          ? `${g.remaining} ${g.remaining === 1 ? "nota para conferir" : "notas para conferir"}`
-                          : g.issues
-                            ? "Conferido · com divergência"
-                            : "Contagem concluída"}
-                      </small>
-                    </span>
-                    <span className="relation-line-volumes">
-                      <strong>{g.expected}</strong>
-                      <small>VOL.</small>
-                    </span>
-                    <ChevronRight size={15} />
-                  </button>
-                ))}
+                  ))}
           </div>
-          {((!currentGroup && !clientGroups(state.notes, id, query).length) ||
+          {((!currentGroup && (query.trim() ? !searchRows.length : !groups.length)) ||
             (currentGroup &&
               !currentGroup.rows.some((n) =>
                 [n.nf, n.pedido].join(" ").includes(query.trim()),
@@ -369,9 +427,11 @@ function FieldNote({
   );
   const [observation, setObservation] = useState(note.observacao);
   const [error, setError] = useState("");
+  const [calculation, setCalculation] = useState(note.calculo || "");
   const dirty =
     quantity !== (note.encontrados === null ? "" : String(note.encontrados)) ||
     observation !== note.observacao ||
+    calculation !== (note.calculo || "") ||
     (divergence &&
       status !==
         (note.status === "pendente" || note.status === "conferida" ? "localizacao" : note.status));
@@ -381,8 +441,18 @@ function FieldNote({
   const delta = quantity === "" ? null : Number(quantity) - note.previstos;
   function save(exact: boolean) {
     const input = exact
-      ? { encontrados: note.previstos, status: "conferida" as const, observacao: note.observacao }
-      : { encontrados: quantity === "" ? NaN : Number(quantity), status, observacao: observation };
+      ? {
+          encontrados: note.previstos,
+          status: "conferida" as const,
+          observacao: observation,
+          calculo: note.encontrados === note.previstos ? note.calculo || "" : "",
+        }
+      : {
+          encontrados: quantity === "" ? NaN : Number(quantity),
+          status,
+          observacao: observation,
+          calculo: calculation,
+        };
     const issue = noteError(input, note.previstos);
     setError(issue);
     if (issue || !editable) return;
@@ -426,11 +496,47 @@ function FieldNote({
         </div>
       ) : (
         <>
+          {note.encontrados !== null && (
+            <div className="field-previous">
+              <strong>Já registrado: {note.encontrados} volumes</strong>
+              <StatusPill map={nfMap} value={note.status} />
+              <p>{note.observacao}</p>
+            </div>
+          )}
+          <CountCalculator
+            onApply={(count, expression) => {
+              setQuantity(String(count));
+              setCalculation(expression);
+              setDivergence(true);
+              setError("");
+              if (!["avaria", "divergencia"].includes(status))
+                setStatus(
+                  count === note.previstos
+                    ? "conferida"
+                    : count > note.previstos
+                      ? "excedente"
+                      : "localizacao",
+                );
+            }}
+          />
           {!divergence ? (
             <>
               <p className="field-instruction">
                 Confira fisicamente os volumes antes de confirmar.
               </p>
+              <details className="field-details">
+                <summary>Adicionar observação</summary>
+                <label className="field-group">
+                  <span>Observação da contagem</span>
+                  <textarea
+                    className="field"
+                    rows={2}
+                    maxLength={2000}
+                    value={observation}
+                    onChange={(e) => setObservation(e.target.value)}
+                  />
+                </label>
+              </details>
               <Btn className="field-primary" onClick={() => save(true)}>
                 <Check size={19} />
                 Confirmar {note.previstos} volumes
@@ -461,9 +567,17 @@ function FieldNote({
                   step={1}
                   value={quantity}
                   placeholder="Digite a quantidade"
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => {
+                    setQuantity(e.target.value);
+                    setCalculation("");
+                  }}
                 />
               </label>
+              {calculation && (
+                <p className="field-calculation">
+                  Conta utilizada: {calculation} = {quantity}
+                </p>
+              )}
               {delta !== null && (
                 <p className="field-difference" aria-live="polite">
                   {delta === 0
@@ -488,6 +602,9 @@ function FieldNote({
                   <option value="conferida">Localizado · sem divergência</option>
                 </select>
               </label>
+              {status === "localizacao" && (
+                <p className="field-help">Ainda estamos procurando. Isso não confirma uma falta.</p>
+              )}
               <label className="field-group">
                 <span>Observação {status !== "conferida" && "*"}</span>
                 <textarea
@@ -525,8 +642,23 @@ function FieldNote({
               ? `${note.registradoPor} · ${note.registradoEm}`
               : "Ainda não conferida"}
           </dd>
+          {note.calculo && (
+            <>
+              <dt>Conta registrada</dt>
+              <dd>
+                {note.calculo} = {note.encontrados}
+              </dd>
+            </>
+          )}
         </dl>
       </details>
+      {editable && (
+        <p className="field-save-state" aria-live="polite">
+          {dirty
+            ? "Alterações não salvas. Toque em salvar para registrar."
+            : "Os registros deste teste ficam somente nesta sessão."}
+        </p>
+      )}
     </div>
   );
 }

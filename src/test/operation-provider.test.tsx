@@ -88,6 +88,7 @@ describe("Fluxo integrado de demonstração", () => {
         justificativa: "Recebimento conferido",
         codigoOficial: "REF-TESTE",
         providencia: "Volume localizado",
+        recebimentoConfirmado: true,
       }),
     );
     expect(result.current.state.cases.find((c) => c.id === "OC-DEMO-311")?.status).toBe(
@@ -95,6 +96,12 @@ describe("Fluxo integrado de demonstração", () => {
     );
     expect(result.current.state.history[0]?.descricao).toContain(
       "Referência oficial informada manualmente: REF-TESTE",
+    );
+    expect(
+      result.current.state.cases.find((c) => c.id === "OC-DEMO-311")?.recebimentoConfirmado,
+    ).toBe(true);
+    expect(result.current.state.history[0]?.descricao).toContain(
+      "Verificação do recebimento/resolução: confirmada manualmente",
     );
   });
 });
