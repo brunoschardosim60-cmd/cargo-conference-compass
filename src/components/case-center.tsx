@@ -12,7 +12,13 @@ import { EvidencePhotos } from "./evidence-photos";
 import { productSummary } from "@/lib/product-count";
 import { UnsavedChanges } from "./unsaved-changes";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
-export function CaseCenter() {
+export function CaseCenter({
+  initialOperation = "",
+  initialCase = "",
+}: {
+  initialOperation?: string;
+  initialCase?: string;
+}) {
   const { state } = useOperations();
   const [dirty, setDirty] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
@@ -23,10 +29,10 @@ export function CaseCenter() {
   }
   const [q, setQ] = useState(""),
     [status, setStatus] = useState(""),
-    [operation, setOperation] = useState(""),
+    [operation, setOperation] = useState(initialOperation),
     [date, setDate] = useState(""),
-    [scope, setScope] = useState("abertas"),
-    [selected, setSelected] = useState("");
+    [scope, setScope] = useState(initialCase ? "todas" : "abertas"),
+    [selected, setSelected] = useState(initialCase);
   const base = state.cases;
   const rows = base.filter(
     (c) =>
@@ -85,29 +91,34 @@ export function CaseCenter() {
           onChange={(v) => changeView(() => setQ(v))}
           placeholder="Buscar NF, cliente, responsável ou pendência"
         />
-        <FilterSelect
-          label="Operação"
-          value={operation}
-          onChange={(v) => changeView(() => setOperation(v))}
-          options={state.operations.map((o) => [o.id, o.id])}
-        />
-        <FilterSelect
-          label="Situação"
-          value={status}
-          onChange={(v) => changeView(() => setStatus(v))}
-          options={Object.entries(ocMap).map(([k, v]) => [k, v[0]])}
-        />
-        <input
-          className="field !w-auto !py-2 text-xs"
-          aria-label="Data do registro"
-          title="Data do registro"
-          type="date"
-          value={date}
-          onChange={(e) => {
-            const value = e.target.value;
-            changeView(() => setDate(value));
-          }}
-        />
+        <details className="compact-filters">
+          <summary>Filtros{status || operation || date ? " ativos" : ""}</summary>
+          <div className="filter-fields">
+            <FilterSelect
+              label="Operação"
+              value={operation}
+              onChange={(v) => changeView(() => setOperation(v))}
+              options={state.operations.map((o) => [o.id, o.id])}
+            />
+            <FilterSelect
+              label="Situação"
+              value={status}
+              onChange={(v) => changeView(() => setStatus(v))}
+              options={Object.entries(ocMap).map(([k, v]) => [k, v[0]])}
+            />
+            <input
+              className="field !w-auto !py-2 text-xs"
+              aria-label="Data do registro"
+              title="Data do registro"
+              type="date"
+              value={date}
+              onChange={(e) => {
+                const value = e.target.value;
+                changeView(() => setDate(value));
+              }}
+            />
+          </div>
+        </details>
         {(q || status || operation || date) && (
           <Btn
             variant="ghost"
@@ -126,7 +137,7 @@ export function CaseCenter() {
       </div>
       <div className="case-layout">
         <Panel
-          title="Pendências em aberto"
+          title={scope === "abertas" ? "Pendências em aberto" : "Todos os registros"}
           actions={<span className="muted">{rows.length} registros</span>}
           flush
         >
@@ -540,6 +551,7 @@ function CaseDetail({ item, onDirty }: { item: Case; onDirty: (dirty: boolean) =
                     {e.usuario} · {e.quando}
                   </strong>
                   <p>{e.descricao}</p>
+                  <EvidencePhotos photos={e.photos || []} />
                 </li>
               ))}
             </ol>

@@ -1,7 +1,9 @@
 import { meta } from "@/lib/meta";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader, Panel, SearchBox, FilterSelect, EmptyState, Btn } from "@/components/ui-kit";
+import { historyContext, historyMatches } from "@/lib/history-search";
+import { EvidencePhotos } from "@/components/evidence-photos";
 import { useOperations } from "@/lib/operation-context";
 export const Route = createFileRoute("/historico")({
   head: () => meta("Histórico de atividades", "Conferência logística interna da filial POA."),
@@ -10,12 +12,9 @@ export const Route = createFileRoute("/historico")({
 function Page() {
   const { state } = useOperations();
   const [q, setQ] = useState(""),
-    [user, setUser] = useState("");
-  const rows = state.history.filter(
-    (e) =>
-      (!user || e.usuario === user) &&
-      [e.descricao, e.ref, e.usuario].join(" ").toLowerCase().includes(q.toLowerCase()),
-  );
+    [user, setUser] = useState(""),
+    [date, setDate] = useState("");
+  const rows = state.history.filter((e) => historyMatches(state, e, q, date, user));
   return (
     <>
       <div className="eyebrow">RASTREABILIDADE / ATIVIDADES</div>
@@ -52,22 +51,41 @@ function Page() {
           </Btn>
         }
       />
-      <div className="info-strip mb-5">
-        Histórico de demonstração. As alterações realizadas neste aparelho preservam os valores
-        anteriores; a auditoria durável e protegida será implementada no backend.
-      </div>
       <div className="toolbar">
         <SearchBox
           value={q}
           onChange={setQ}
-          placeholder="Buscar NF, operação, pendência ou descrição"
+          placeholder="Buscar NF, cliente, destino ou identificação"
         />
-        <FilterSelect
-          label="Usuário"
-          value={user}
-          onChange={setUser}
-          options={[...new Set(state.history.map((e) => e.usuario))].map((v) => [v, v])}
-        />
+        <details className="compact-filters">
+          <summary>Filtros{user || date ? " ativos" : ""}</summary>
+          <div className="filter-fields">
+            <FilterSelect
+              label="Usuário"
+              value={user}
+              onChange={setUser}
+              options={[...new Set(state.history.map((e) => e.usuario))].map((v) => [v, v])}
+            />
+            <label className="field-group">
+              <span>Data da movimentação</span>
+              <input
+                className="field"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </label>
+            <Btn
+              variant="ghost"
+              onClick={() => {
+                setUser("");
+                setDate("");
+              }}
+            >
+              Limpar filtros
+            </Btn>
+          </div>
+        </details>
       </div>
       <Panel
         title="Linha do tempo"
@@ -76,17 +94,52 @@ function Page() {
       >
         {rows.length ? (
           <ol className="timeline">
-            {rows.map((e) => (
-              <li key={e.id}>
-                <time>{e.quando}</time>
-                <div>
-                  <h3>{e.descricao}</h3>
-                  <p>
-                    {e.usuario} · {e.ref} · {e.tipo}
-                  </p>
-                </div>
-              </li>
-            ))}
+            {rows.map((e) => {
+              const context = historyContext(state, e);
+              return (
+                <li key={e.id}>
+                  <time>{e.quando}</time>
+                  <div>
+                    <details className="history-event">
+                      <summary>
+                        <strong>{context.title}</strong>
+                        <span>
+                          {e.usuario} · {e.tipo.replaceAll("_", " ")}
+                        </span>
+                      </summary>
+                      <p className="history-description">{e.descricao}</p>
+                      <EvidencePhotos photos={e.photos || []} />
+                      {context.other ? (
+                        <Link
+                          className="table-link"
+                          to="/extraviados"
+                          search={{ registro: context.other.id }}
+                        >
+                          Abrir volume e linha do tempo
+                        </Link>
+                      ) : context.item ? (
+                        <Link
+                          className="table-link"
+                          to="/pendencias"
+                          search={{ caso: context.item.id }}
+                        >
+                          Abrir pendência e histórico
+                        </Link>
+                      ) : context.operation ? (
+                        <Link
+                          className="table-link"
+                          to="/conferencias/$id"
+                          params={{ id: context.operation.id }}
+                          search={context.note ? { nota: context.note.id } : {}}
+                        >
+                          Abrir conferência
+                        </Link>
+                      ) : null}
+                    </details>
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         ) : (
           <EmptyState

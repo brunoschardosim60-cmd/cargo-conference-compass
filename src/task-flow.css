@@ -1,4 +1,239 @@
 /* Task-focused surfaces: mobile counting and a compact administrative desk. */
+.conference-home {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+.conference-search {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+  margin: 22px 0 18px;
+}
+.conference-search > :first-child {
+  max-width: 650px;
+}
+.compact-filters {
+  position: relative;
+  flex-shrink: 0;
+}
+.compact-filters > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid #cdd6da;
+  border-radius: 5px;
+  background: white;
+  padding: 8px 12px;
+  font-size: 13px;
+  min-height: 36px;
+}
+.compact-filters > summary::-webkit-details-marker {
+  display: none;
+}
+.compact-filters[open] > summary {
+  border-color: #195366;
+  color: #13485b;
+}
+.filter-fields {
+  position: absolute;
+  z-index: 25;
+  right: 0;
+  top: calc(100% + 6px);
+  width: 290px;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: white;
+  border: 1px solid #cdd6da;
+  border-radius: 6px;
+  box-shadow: 0 8px 25px #142d4014;
+}
+.filter-fields > select {
+  width: 100%;
+}
+.check-filter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+}
+.check-filter input {
+  width: 17px;
+  height: 17px;
+  accent-color: #195366;
+}
+.active-filter-note {
+  font-size: 12px;
+  color: #5a6c77;
+  margin: 12px 0;
+}
+.conference-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 12px;
+  color: #60717d;
+  padding: 16px 0;
+}
+.conference-footer a {
+  color: #165b70;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.secondary-navigation {
+  margin: auto 16px 12px;
+  border-top: 1px solid #d6ddda;
+  padding-top: 14px;
+}
+.secondary-navigation summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  color: #4b6068;
+  font-size: 12px;
+}
+.secondary-navigation a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #294853;
+  font-size: 13px;
+  padding: 10px 0;
+}
+.secondary-navigation p {
+  color: #62757d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.operation-issue {
+  display: block;
+  color: #94551e;
+  font-size: 12px;
+  margin-top: 6px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.other-status {
+  font-size: 12px;
+  color: #725317;
+  background: #f6f1e6;
+  padding: 4px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.other-status.received {
+  color: #216249;
+  background: #e7f3ec;
+}
+.other-editor-dialog {
+  width: min(720px, calc(100vw - 32px));
+  max-width: 720px !important;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+}
+.other-editor {
+  display: grid;
+  gap: 18px;
+}
+.other-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.other-editor .field-group {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+}
+.other-editor .field {
+  width: 100%;
+  min-width: 0;
+}
+.other-editor > button[type="submit"] {
+  justify-self: start;
+}
+.receipt-section {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  background: #eff6f3;
+  border-left: 3px solid #2b7156;
+}
+.receipt-section p {
+  font-size: 12px;
+  color: #3e6556;
+}
+.record-history {
+  border-top: 1px solid #dce2e5;
+  padding-top: 16px;
+}
+.record-history summary,
+.history-event summary {
+  cursor: pointer;
+  font-size: 14px;
+}
+.record-history article {
+  border-left: 2px solid #cfdbdf;
+  padding: 8px 0 8px 14px;
+  margin: 14px 0;
+  font-size: 12px;
+}
+.record-history p,
+.history-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
+  color: #50636e;
+}
+.history-event summary > strong {
+  font-size: 14px;
+}
+.history-event summary > span {
+  display: block;
+  margin: 5px 0 0 16px;
+  font-size: 12px;
+  color: #667985;
+}
+.history-description {
+  margin: 14px 0;
+}
+.history-event[open] {
+  padding-bottom: 10px;
+}
+@media (max-width: 640px) {
+  .conference-search {
+    flex-wrap: wrap;
+  }
+  .conference-search > :first-child {
+    flex-basis: 100%;
+  }
+  .conference-search .filter-fields {
+    right: auto;
+    left: 0;
+    width: min(290px, calc(100vw - 40px));
+  }
+  .other-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .other-editor-dialog {
+    padding: 22px 18px;
+    max-height: calc(100dvh - 20px);
+  }
+  .other-editor .field {
+    min-height: 46px;
+    font-size: 16px;
+  }
+  .other-editor button {
+    min-height: 44px;
+  }
+  .conference-footer {
+    flex-wrap: wrap;
+  }
+}
 .simple-desk {
   max-width: 1440px;
   margin: auto;

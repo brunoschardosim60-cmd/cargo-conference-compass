@@ -1,7 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  LayoutDashboard,
   ClipboardCheck,
   FileText,
   AlertTriangle,
@@ -22,25 +21,12 @@ import { useHandheld } from "@/hooks/use-handheld";
 
 const groups = [
   {
-    label: "OPERAÇÃO",
+    label: "OPERAÇÃO POA",
     items: [
-      { to: "/", label: "Recebimento", icon: LayoutDashboard },
       { to: "/conferencias", label: "Conferências", icon: ClipboardCheck },
-    ],
-  },
-  {
-    label: "ACOMPANHAMENTO",
-    items: [
       { to: "/pendencias", label: "Faltas e divergências", icon: AlertTriangle },
       { to: "/extraviados", label: "Outras praças", icon: PackageSearch },
-    ],
-  },
-  {
-    label: "ADMINISTRAÇÃO",
-    items: [
-      { to: "/historico", label: "Histórico de atividades", icon: History },
-      { to: "/usuarios", label: "Usuários e acessos", icon: Users },
-      { to: "/configuracoes", label: "Configurações", icon: Settings },
+      { to: "/historico", label: "Histórico", icon: History },
     ],
   },
 ] as const;
@@ -56,7 +42,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     groups
       .flatMap((g) => [...g.items])
       .find((n) => n.to === path.replace(/\/$/, "") || n.to === path)?.label ||
-    "Mesa de conferência";
+    (path === "/"
+      ? "Conferências"
+      : path === "/usuarios"
+        ? "Usuários e acessos"
+        : path === "/configuracoes"
+          ? "Configurações"
+          : "Detalhes da operação");
   const term = query.trim().toLowerCase();
   const results = term
     ? state.notes
@@ -98,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setMobile(false)}
                 className={cn(
                   "nav-item",
-                  (n.to === "/" ? path === "/" : path.startsWith(n.to)) && "active",
+                  (path.startsWith(n.to) || (n.to === "/conferencias" && path === "/")) && "active",
                 )}
               >
                 <n.icon size={17} />
@@ -116,10 +108,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         ))}
       </nav>
-      <Link to="/notas" className="nav-item">
-        <FileText size={17} />
-        Consultar notas
-      </Link>
+      <details className="secondary-navigation">
+        <summary>
+          <Settings size={17} />
+          Administração
+        </summary>
+        <Link to="/usuarios" className="nav-item" onClick={() => setMobile(false)}>
+          <Users size={17} />
+          Usuários e acessos
+        </Link>
+        <Link to="/configuracoes" className="nav-item" onClick={() => setMobile(false)}>
+          <Settings size={17} />
+          Configurações
+        </Link>
+        <p>Acessos demonstrativos. Permissões individuais aguardam conexão.</p>
+      </details>
       <div className="sidebar-footer">
         <span className="avatar">AP</span>
         <div>

@@ -1,9 +1,11 @@
 import { createContext, useContext } from "react";
 import type { State, NoteInput, Case, Operation, Evidence } from "./operation-model";
 import type { NotaFiscal } from "./demo-data";
+import type { OtherPlaceInput } from "./other-places";
 
 type ContextValue = {
   state: State;
+  saveOther: (id: string | null, input: OtherPlaceInput) => string;
   reportFound: (caseId: string, quantity: number, description: string, photos: Evidence[]) => void;
   validateFound: (caseId: string, reportId: string, accepted: boolean, reason: string) => void;
   record: (id: string, input: NoteInput) => void;

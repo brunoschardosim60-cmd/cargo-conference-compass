@@ -11,6 +11,7 @@ import {
 } from "./demo-data";
 import { calculateCount } from "./count-calculator";
 import { productError, productSummary, type ProductCount } from "./product-count";
+import { demoOtherPlaces, type OtherPlace } from "./other-places";
 
 export type Evidence = { id: string; name: string; data: string; createdAt: string };
 export type Discovery = {
@@ -48,7 +49,8 @@ export type State = {
   operations: Operation[];
   notes: Note[];
   cases: Case[];
-  history: (Evento & { notaId?: string })[];
+  otherPlaces: OtherPlace[];
+  history: (Evento & { notaId?: string; photos?: Evidence[] })[];
 };
 export type NoteInput = {
   encontrados: number;
@@ -113,6 +115,7 @@ export function createDemoState(): State {
           : "",
   }));
   return {
+    otherPlaces: demoOtherPlaces(),
     operations: conferencias.map((c) => {
       const ns = sample.filter((n) => n.conferencia === c.id);
       return {
@@ -231,6 +234,7 @@ export function saveNote(
         usuario: actor,
         tipo: "conferencia",
         notaId: before.id,
+        photos: (input.photos || []).filter((p) => !before.photos?.some((old) => old.id === p.id)),
         ref: before.conferencia,
         descricao: `NF ${before.nf}: ${before.encontrados ?? "não contado"} → ${input.encontrados} volumes; ${before.status} → ${input.status}. Observação anterior: ${before.observacao || "nenhuma"}. Nova observação: ${input.observacao || "nenhuma"}. Conta anterior: ${before.calculo || "não utilizada"}. Conta atual: ${calculo || "não utilizada"}. Produtos antes: ${productSummary(before.produtos)}. Produtos agora: ${productSummary(updated.produtos)}. Fotos anexadas: ${updated.photos?.length || 0}.`,
       },

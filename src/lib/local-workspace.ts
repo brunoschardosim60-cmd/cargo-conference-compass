@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { demoOtherPlaces } from "./other-places";
 import type { State } from "./operation-model";
 
 // Evaluation storage only. Never a substitute for authenticated server persistence.
@@ -112,6 +113,39 @@ const storedState = z
         })
         .passthrough(),
     ),
+    otherPlaces: z
+      .array(
+        z.object({
+          id: text,
+          nf: text,
+          identificacao: text,
+          cliente: text,
+          origem: text,
+          destino: text,
+          volumes: count,
+          identificadoEm: text,
+          responsavel: text,
+          observacao: text,
+          photos: z.array(photo),
+          status: z.enum([
+            "identificado",
+            "aguardando_ocorrencia",
+            "aguardando_retorno",
+            "encaminhado",
+            "confirmacao_pendente",
+            "recebido",
+          ]),
+          carreta: text,
+          enviadoEm: text,
+          recebidoEm: text,
+          confirmacao: text,
+          codigoOficial: text,
+          criadoPor: text,
+          atualizadoEm: text,
+          version: count.default(0),
+        }),
+      )
+      .optional(),
     history: z.array(
       z
         .object({ id: text, descricao: text, quando: text, usuario: text, tipo: text, ref: text })
@@ -128,7 +162,13 @@ export function loadWorkspace() {
     throw new Error(
       "Os dados locais não puderam ser lidos. Eles foram preservados; não serão substituídos.",
     );
-  return { raw, state: result.data as unknown as State };
+  return {
+    raw,
+    state: {
+      ...result.data,
+      otherPlaces: result.data.otherPlaces ?? demoOtherPlaces(),
+    } as unknown as State,
+  };
 }
 
 export function persistWorkspace(state: State, previous: string | null) {

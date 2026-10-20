@@ -11,6 +11,7 @@ import {
 import { toast } from "sonner";
 import { useOperations } from "@/lib/operation-context";
 import { canFinish, needsCount, noteError, type Note } from "@/lib/operation-model";
+import { operationMatches } from "@/lib/operation-search";
 import { clientGroups } from "@/lib/client-groups";
 import type { NfStatus } from "@/lib/demo-data";
 import { Btn, EmptyState, SearchBox } from "./ui-kit";
@@ -27,9 +28,7 @@ export function FieldOperations() {
   const [query, setQuery] = useState("");
   const [completed, setCompleted] = useState(false);
   const rows = state.operations.filter(
-    (o) =>
-      (o.status === "concluida") === completed &&
-      [o.placa, o.origem, o.id].join(" ").toLowerCase().includes(query.trim().toLowerCase()),
+    (o) => (o.status === "concluida") === completed && operationMatches(state, o, query),
   );
   return (
     <>
@@ -41,7 +40,7 @@ export function FieldOperations() {
         <h1>Qual carga vai conferir?</h1>
         <p>Escolha a carreta. Depois, o cliente e a nota.</p>
       </div>
-      <SearchBox placeholder="Buscar placa ou origem" value={query} onChange={setQuery} />
+      <SearchBox placeholder="Buscar placa, NF ou origem" value={query} onChange={setQuery} />
       <div className="field-tabs" aria-label="Situação das cargas">
         <button aria-pressed={!completed} onClick={() => setCompleted(false)}>
           Para conferir

@@ -4,6 +4,7 @@ import { DataTable, EmptyState } from "./ui-kit";
 import { StatusPill, confMap } from "./status";
 import { useOperations } from "@/lib/operation-context";
 import type { Operation } from "@/lib/operation-model";
+import { openIssues } from "@/lib/operation-search";
 export function OperationTable({ rows }: { rows: Operation[] }) {
   const { state } = useOperations();
   if (!rows.length)
@@ -46,14 +47,19 @@ export function OperationTable({ rows }: { rows: Operation[] }) {
             </td>
             <td>
               <StatusPill map={confMap} value={c.status} />
+              {openIssues(state, c.id) > 0 && (
+                <Link to="/pendencias" search={{ operacao: c.id }} className="operation-issue">
+                  {openIssues(state, c.id)} pendência(s)
+                </Link>
+              )}
             </td>
             <td>
               <Link to="/conferencias/$id" params={{ id: c.id }} className="table-link">
                 {c.status === "concluida"
                   ? "Consultar"
                   : c.status === "aguardando"
-                    ? "Iniciar"
-                    : "Abrir"}
+                    ? "Abrir"
+                    : "Continuar"}
                 <ArrowRight size={14} />
               </Link>
             </td>

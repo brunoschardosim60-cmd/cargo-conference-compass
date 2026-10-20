@@ -15,6 +15,7 @@ import {
 import type { NotaFiscal } from "@/lib/demo-data";
 import { loadWorkspace, persistWorkspace } from "@/lib/local-workspace";
 import { toast } from "sonner";
+import { saveOtherPlace, type OtherPlaceInput } from "@/lib/other-places";
 
 const actor = "Ana P. · demonstração";
 const timestamp = () => new Date().toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" });
@@ -89,6 +90,11 @@ export function OperationProvider({ children }: { children: ReactNode }) {
     const now = timestamp(),
       uid = crypto.randomUUID();
     commit((s) => saveNote(s, id, input, actor, now, uid));
+  }
+  function saveOther(id: string | null, input: OtherPlaceInput) {
+    const key = id || `EX-LOCAL-${crypto.randomUUID()}`;
+    commit((s) => saveOtherPlace(s, key, input, actor, timestamp(), crypto.randomUUID()));
+    return key;
   }
   function changeOperation(id: string, status: Operation["status"]) {
     const now = timestamp(),
@@ -217,6 +223,7 @@ export function OperationProvider({ children }: { children: ReactNode }) {
     <OperationContext.Provider
       value={{
         state,
+        saveOther,
         record,
         changeOperation,
         updateCase,
