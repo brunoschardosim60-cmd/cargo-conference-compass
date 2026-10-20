@@ -16,6 +16,9 @@ import type { NfStatus } from "@/lib/demo-data";
 import { Btn, EmptyState, SearchBox } from "./ui-kit";
 import { StatusPill, confMap, nfMap } from "./status";
 import { UnsavedChanges } from "./unsaved-changes";
+import { EvidencePhotos } from "./evidence-photos";
+import { productSummary } from "@/lib/product-count";
+import { readNoteDraft, clearNoteDraft, useNoteDraft } from "@/hooks/use-note-draft";
 import { CountCalculator } from "./count-calculator";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
 
@@ -35,10 +38,8 @@ export function FieldOperations() {
           <span />
           RECEBIMENTO / PAVILHÃO
         </span>
-        <h1>
-          Relações de carga<span>.</span>
-        </h1>
-        <p>Selecione a carreta para iniciar a contagem.</p>
+        <h1>Qual carga vai conferir?</h1>
+        <p>Escolha a carreta. Depois, o cliente e a nota.</p>
       </div>
       <SearchBox placeholder="Buscar placa ou origem" value={query} onChange={setQuery} />
       <div className="field-tabs" aria-label="Situação das cargas">
@@ -145,7 +146,12 @@ export function FieldConference({ id }: { id: string }) {
     );
   return (
     <>
-      <UnsavedChanges dirty={dirty} />
+      <UnsavedChanges
+        dirty={dirty}
+        onDiscard={() => {
+          if (noteId) clearNoteDraft(noteId);
+        }}
+      />
       {savedMessage && (
         <p className="field-save-receipt" role="status">
           <CheckCircle2 size={20} />
@@ -226,7 +232,7 @@ export function FieldConference({ id }: { id: string }) {
           onDirty={setDirty}
           onSaved={() => {
             setDirty(false);
-            setSavedMessage(`NF ${note.nf} salva nesta sessão. Você pode continuar.`);
+            setSavedMessage(`NF ${note.nf} salva neste aparelho.`);
             const next = currentGroup?.rows.find((n) => n.id !== note.id && needsCount(n));
             setNoteId(next?.id || "");
             if (!next) {
@@ -370,6 +376,7 @@ export function FieldConference({ id }: { id: string }) {
           </Btn>
           <Btn
             onClick={() => {
+              clearNoteDraft(noteId);
               setDiscard(false);
               setDirty(false);
               setNoteId("");
@@ -416,19 +423,25 @@ function FieldNote({
   onSaved: () => void;
 }) {
   const { record } = useOperations();
+  const [draft] = useState(() => readNoteDraft(note.id, note.registradoEm));
   const [divergence, setDivergence] = useState(
-    note.encontrados !== null && note.status !== "conferida",
+    draft?.divergence ?? (note.encontrados !== null && note.status !== "conferida"),
   );
   const [quantity, setQuantity] = useState(
-    note.encontrados === null ? "" : String(note.encontrados),
+    draft?.quantity ?? (note.encontrados === null ? "" : String(note.encontrados)),
   );
   const [status, setStatus] = useState<NfStatus>(
-    note.status === "pendente" || note.status === "conferida" ? "localizacao" : note.status,
+    draft?.status ??
+      (note.status === "pendente" || note.status === "conferida" ? "localizacao" : note.status),
   );
-  const [observation, setObservation] = useState(note.observacao);
+  const [observation, setObservation] = useState(draft?.observation ?? note.observacao);
   const [error, setError] = useState("");
-  const [calculation, setCalculation] = useState(note.calculo || "");
+  const [calculation, setCalculation] = useState(draft?.calculation ?? note.calculo ?? "");
+  const [products, setProducts] = useState(draft?.products ?? note.produtos);
+  const [photos, setPhotos] = useState(draft?.photos ?? note.photos ?? []);
   const dirty =
+    JSON.stringify(products) !== JSON.stringify(note.produtos) ||
+    JSON.stringify(photos) !== JSON.stringify(note.photos ?? []) ||
     quantity !== (note.encontrados === null ? "" : String(note.encontrados)) ||
     observation !== note.observacao ||
     calculation !== (note.calculo || "") ||
@@ -438,35 +451,47 @@ function FieldNote({
   useEffect(() => {
     onDirty(dirty);
   }, [dirty, onDirty]);
+  const draftMessage = useNoteDraft(
+    note.id,
+    { quantity, status, observation, calculation, divergence, products, photos },
+    dirty,
+    note.registradoEm,
+  );
   const delta = quantity === "" ? null : Number(quantity) - note.previstos;
   function save(exact: boolean) {
-    const input = exact
-      ? {
-          encontrados: note.previstos,
-          status: "conferida" as const,
-          observacao: observation,
-          calculo: note.encontrados === note.previstos ? note.calculo || "" : "",
-        }
-      : {
-          encontrados: quantity === "" ? NaN : Number(quantity),
-          status,
-          observacao: observation,
-          calculo: calculation,
-        };
+    const input = {
+      produtos: products,
+      photos,
+      ...(exact
+        ? {
+            encontrados: note.previstos,
+            status: "conferida" as const,
+            observacao: observation,
+            calculo: note.encontrados === note.previstos ? note.calculo || "" : "",
+          }
+        : {
+            encontrados: quantity === "" ? NaN : Number(quantity),
+            status,
+            observacao: observation,
+            calculo: calculation,
+          }),
+    };
     const issue = noteError(input, note.previstos);
     setError(issue);
     if (issue || !editable) return;
-    record(note.id, input);
-    toast.success(`NF ${note.nf} salva nesta sessão.`);
+    try {
+      record(note.id, input);
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
+    clearNoteDraft(note.id);
+    toast.success(`NF ${note.nf} salva neste aparelho.`);
     onSaved();
   }
   return (
     <div className="field-count">
       <div className="field-expected">
-        <div className="count-sheet-title">
-          <span>RELAÇÃO DE CARGA</span>
-          <span>POA</span>
-        </div>
         <div className="count-sheet-value">
           <div>
             <span>Volumes previstos</span>
@@ -476,16 +501,6 @@ function FieldNote({
             {note.previstos}
             <small>VOL.</small>
           </strong>
-        </div>
-        <div className="count-sheet-meta">
-          <div>
-            <small>PALLET</small>
-            <strong>{note.pallet || "Não informado"}</strong>
-          </div>
-          <div>
-            <small>PRAÇA</small>
-            <strong>{note.praca || "Não informada"}</strong>
-          </div>
         </div>
       </div>
       {!editable ? (
@@ -503,22 +518,40 @@ function FieldNote({
               <p>{note.observacao}</p>
             </div>
           )}
-          <CountCalculator
-            onApply={(count, expression) => {
-              setQuantity(String(count));
-              setCalculation(expression);
-              setDivergence(true);
-              setError("");
-              if (!["avaria", "divergencia"].includes(status))
-                setStatus(
-                  count === note.previstos
-                    ? "conferida"
-                    : count > note.previstos
-                      ? "excedente"
-                      : "localizacao",
-                );
-            }}
-          />
+          <div className="note-tools">
+            <CountCalculator
+              expectedVolumes={note.previstos}
+              products={products}
+              onApplyProducts={setProducts}
+              onApply={(count, expression) => {
+                setQuantity(String(count));
+                setCalculation(expression);
+                setDivergence(true);
+                setError("");
+                if (!["avaria", "divergencia"].includes(status))
+                  setStatus(
+                    count === note.previstos
+                      ? "conferida"
+                      : count > note.previstos
+                        ? "excedente"
+                        : "localizacao",
+                  );
+              }}
+            />
+          </div>
+          {products && (
+            <p className="product-record" role="status">
+              <strong>Produtos: {products.total} unidades</strong>
+              <span>{productSummary(products)}</span>
+              <small>Registro auxiliar · volumes conferidos separadamente.</small>
+            </p>
+          )}
+          <details className="field-details">
+            <summary>
+              Foto da etiqueta ou mercadoria {photos.length ? `(${photos.length})` : ""}
+            </summary>
+            <EvidencePhotos photos={photos} onChange={setPhotos} />
+          </details>
           {!divergence ? (
             <>
               <p className="field-instruction">
@@ -632,6 +665,10 @@ function FieldNote({
       <details className="field-details">
         <summary>Mais informações da nota</summary>
         <dl>
+          <dt>Pallet / praça</dt>
+          <dd>
+            {note.pallet || "Não informado"} · {note.praca || "Não informada"}
+          </dd>
           <dt>Pedido</dt>
           <dd>{note.pedido || "Não informado"}</dd>
           <dt>Remetente</dt>
@@ -652,11 +689,22 @@ function FieldNote({
           )}
         </dl>
       </details>
+      {!editable && (
+        <>
+          <EvidencePhotos photos={note.photos || []} />
+          {note.produtos && (
+            <p className="product-record">Produtos: {productSummary(note.produtos)}</p>
+          )}
+        </>
+      )}
+      {error && !divergence && (
+        <p role="alert" className="error-text">
+          {error}
+        </p>
+      )}
       {editable && (
         <p className="field-save-state" aria-live="polite">
-          {dirty
-            ? "Alterações não salvas. Toque em salvar para registrar."
-            : "Os registros deste teste ficam somente nesta sessão."}
+          {dirty ? draftMessage : "Teste local · sem sincronização com outros aparelhos."}
         </p>
       )}
     </div>

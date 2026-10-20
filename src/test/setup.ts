@@ -18,3 +18,6 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+import { beforeEach } from "vitest";
+beforeEach(() => localStorage.clear());

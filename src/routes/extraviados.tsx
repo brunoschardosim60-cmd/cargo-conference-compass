@@ -1,7 +1,7 @@
 import { meta } from "@/lib/meta";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowRight, PackageSearch, ImageOff, Truck } from "lucide-react";
+import { ArrowRight, ImageOff, Truck } from "lucide-react";
 import {
   PageHeader,
   Panel,
@@ -34,37 +34,6 @@ function Page() {
         title="Volumes de outras praças"
         subtitle="Mercadorias recebidas em POA com destino a outra unidade. Controle separado das faltas locais."
       />
-      <div className="metrics">
-        {[
-          {
-            label: "Identificação e registro",
-            value: extraviados.filter((e) =>
-              ["identificado", "aguardando_ocorrencia"].includes(e.status),
-            ).length,
-          },
-          {
-            label: "Aguardando retorno",
-            value: extraviados.filter((e) => e.status === "aguardando_retorno").length,
-          },
-          {
-            label: "Encaminhados",
-            value: extraviados.filter((e) => e.status === "encaminhado").length,
-          },
-          {
-            label: "Recebimento a confirmar",
-            value: extraviados.filter((e) => e.status === "confirmacao_pendente").length,
-          },
-        ].map((m) => (
-          <div className="metric" key={m.label}>
-            <div className="metric-top">
-              {m.label}
-              <PackageSearch size={16} />
-            </div>
-            <div className="metric-value">{String(m.value).padStart(2, "0")}</div>
-            <small>Registros na amostra</small>
-          </div>
-        ))}
-      </div>
       <div className="toolbar">
         <SearchBox
           value={q}

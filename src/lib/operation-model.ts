@@ -10,12 +10,27 @@ import {
   type NfStatus,
 } from "./demo-data";
 import { calculateCount } from "./count-calculator";
+import { productError, productSummary, type ProductCount } from "./product-count";
+
+export type Evidence = { id: string; name: string; data: string; createdAt: string };
+export type Discovery = {
+  id: string;
+  quantity: number;
+  description: string;
+  actor: string;
+  at: string;
+  state: "pending" | "validated" | "rejected";
+  decision?: { actor: string; at: string; reason: string };
+  photos?: Evidence[];
+};
 
 export type Note = Omit<NotaFiscal, "peso"> & {
   id: string;
   observacao: string;
   peso: number | null;
   calculo?: string;
+  produtos?: ProductCount | undefined;
+  photos?: Evidence[];
 };
 export type Case = Ocorrencia & {
   codigoOficial?: string;
@@ -25,6 +40,8 @@ export type Case = Ocorrencia & {
   noteId?: string;
   recebimentoConfirmado?: boolean;
   registroOriginal?: NoteInput & { previstos: number; usuario: string; quando: string };
+  discoveries?: Discovery[];
+  updatedAt?: string;
 };
 export type Operation = Conferencia & { iniciadaEm?: string; concluidaEm?: string };
 export type State = {
@@ -38,9 +55,13 @@ export type NoteInput = {
   status: NfStatus;
   observacao: string;
   calculo?: string;
+  produtos?: ProductCount | undefined;
+  photos?: Evidence[];
 };
 
 export function noteError(input: NoteInput, previstos: number) {
+  const products = productError(input.produtos);
+  if (products) return products;
   if (!Number.isSafeInteger(input.encontrados) || input.encontrados < 0)
     return "Informe uma quantidade inteira, igual ou maior que zero.";
   if (input.calculo) {
@@ -137,7 +158,9 @@ export function saveNote(
     before.encontrados === input.encontrados &&
     before.status === input.status &&
     before.observacao === input.observacao &&
-    (before.calculo || "") === calculo
+    (before.calculo || "") === calculo &&
+    JSON.stringify(before.produtos) === JSON.stringify(input.produtos ?? before.produtos) &&
+    JSON.stringify(before.photos || []) === JSON.stringify(input.photos ?? before.photos ?? [])
   )
     return state;
   const updated = { ...before, ...input, calculo, registradoPor: actor, registradoEm: now };
@@ -175,8 +198,16 @@ export function saveNote(
       },
       ...cases,
     ];
-  } else if (existing && input.status !== "conferida") {
-    cases = cases.map((c) => (c.id === existing.id ? { ...c, tipo: input.status } : c));
+  } else if (existing) {
+    cases = cases.map((c) =>
+      c.id === existing.id
+        ? {
+            ...c,
+            updatedAt: now,
+            ...(input.status !== "conferida" ? { tipo: input.status } : {}),
+          }
+        : c,
+    );
   }
   // Finding a volume does not automatically close an administrative case.
   return {
@@ -201,7 +232,93 @@ export function saveNote(
         tipo: "conferencia",
         notaId: before.id,
         ref: before.conferencia,
-        descricao: `NF ${before.nf}: ${before.encontrados ?? "não contado"} → ${input.encontrados} volumes; ${before.status} → ${input.status}. Observação anterior: ${before.observacao || "nenhuma"}. Nova observação: ${input.observacao || "nenhuma"}. Conta anterior: ${before.calculo || "não utilizada"}. Conta atual: ${calculo || "não utilizada"}.`,
+        descricao: `NF ${before.nf}: ${before.encontrados ?? "não contado"} → ${input.encontrados} volumes; ${before.status} → ${input.status}. Observação anterior: ${before.observacao || "nenhuma"}. Nova observação: ${input.observacao || "nenhuma"}. Conta anterior: ${before.calculo || "não utilizada"}. Conta atual: ${calculo || "não utilizada"}. Produtos antes: ${productSummary(before.produtos)}. Produtos agora: ${productSummary(updated.produtos)}. Fotos anexadas: ${updated.photos?.length || 0}.`,
+      },
+      ...state.history,
+    ],
+  };
+}
+
+export function reportDiscovery(state: State, caseId: string, report: Discovery): State {
+  const item = state.cases.find((c) => c.id === caseId);
+  if (!item || ["resolvida", "cancelada"].includes(item.status))
+    throw new Error("Esta pendência já foi encerrada. Atualize a consulta.");
+  if (!Number.isSafeInteger(report.quantity) || report.quantity <= 0 || !report.description.trim())
+    throw new Error("Informe quantos volumes localizou e onde estão.");
+  if (item.discoveries?.some((d) => d.state === "pending"))
+    throw new Error("Já existe uma localização aguardando validação nesta pendência.");
+  return {
+    ...state,
+    cases: state.cases.map((c) =>
+      c.id === caseId
+        ? {
+            ...c,
+            updatedAt: report.at,
+            discoveries: [...(c.discoveries || []), { ...report, state: "pending" }],
+          }
+        : c,
+    ),
+    history: [
+      {
+        id: report.id,
+        quando: report.at,
+        usuario: report.actor,
+        tipo: "localizacao_informada",
+        ref: caseId,
+        descricao: `${report.quantity} volume(s) localizado(s): ${report.description}. Aguardando validação administrativa; contagem original preservada.`,
+      },
+      ...state.history,
+    ],
+  };
+}
+
+export function decideDiscovery(
+  state: State,
+  caseId: string,
+  reportId: string,
+  accepted: boolean,
+  reason: string,
+  actor: string,
+  at: string,
+  eventId: string,
+): State {
+  const item = state.cases.find((c) => c.id === caseId);
+  const report = item?.discoveries?.find((d) => d.id === reportId);
+  if (
+    !item ||
+    !report ||
+    report.state !== "pending" ||
+    ["resolvida", "cancelada"].includes(item.status)
+  )
+    throw new Error("Esta localização não está disponível para validação.");
+  if (!reason.trim()) throw new Error("Descreva o que foi verificado antes de validar.");
+  return {
+    ...state,
+    cases: state.cases.map((c) =>
+      c.id === caseId
+        ? {
+            ...c,
+            updatedAt: at,
+            discoveries: (c.discoveries || []).map((d) =>
+              d.id === reportId
+                ? {
+                    ...d,
+                    state: accepted ? "validated" : "rejected",
+                    decision: { actor, at, reason: reason.trim() },
+                  }
+                : d,
+            ),
+          }
+        : c,
+    ),
+    history: [
+      {
+        id: eventId,
+        quando: at,
+        usuario: actor,
+        tipo: "validacao_localizacao",
+        ref: caseId,
+        descricao: `Localização ${reportId} ${accepted ? "validada" : "não confirmada"}: ${reason.trim()}. O encerramento da pendência exige uma ação separada.`,
       },
       ...state.history,
     ],

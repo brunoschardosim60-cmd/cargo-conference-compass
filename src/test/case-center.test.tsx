@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CaseCenter } from "@/components/case-center";
 import { OperationProvider } from "@/components/operation-provider";
 
-function mount(tower = false) {
+function mount() {
   const root = createRootRoute({
     component: () => (
       <OperationProvider>
@@ -24,7 +24,7 @@ function mount(tower = false) {
   const cases = createRoute({
     getParentRoute: () => root,
     path: "/pendencias",
-    component: () => <CaseCenter tower={tower} />,
+    component: () => <CaseCenter />,
   });
   const history = createRoute({
     getParentRoute: () => root,
@@ -96,10 +96,10 @@ describe("Proteção dos tratamentos administrativos", () => {
     expect(await screen.findByRole("heading", { name: "Destino histórico" })).toBeInTheDocument();
   });
 
-  it("exige confirmação de recebimento na torre antes de resolver", async () => {
-    const action = await mount(true);
+  it("exige confirmação de recebimento no administrativo antes de resolver", async () => {
+    const action = await mount();
     fireEvent.change(action, { target: { value: "Volume recebido" } });
-    fireEvent.change(screen.getByLabelText("Responsável"), { target: { value: "Torre" } });
+    fireEvent.change(screen.getByLabelText("Responsável"), { target: { value: "Ana P." } });
     fireEvent.change(screen.getByLabelText("Situação interna"), { target: { value: "resolvida" } });
     fireEvent.change(screen.getByLabelText("Justificativa do encerramento *"), {
       target: { value: "Conferido no destino" },

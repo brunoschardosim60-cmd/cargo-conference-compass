@@ -7,9 +7,12 @@ import { StatusPill, ocMap, nfMap } from "./status";
 import { useOperations } from "@/lib/operation-context";
 import type { Case } from "@/lib/operation-model";
 import type { OcStatus } from "@/lib/demo-data";
+import { DiscoveryReview } from "./field-shortages";
+import { EvidencePhotos } from "./evidence-photos";
+import { productSummary } from "@/lib/product-count";
 import { UnsavedChanges } from "./unsaved-changes";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
-export function CaseCenter({ tower = false }: { tower?: boolean }) {
+export function CaseCenter() {
   const { state } = useOperations();
   const [dirty, setDirty] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
@@ -40,16 +43,10 @@ export function CaseCenter({ tower = false }: { tower?: boolean }) {
   return (
     <>
       <UnsavedChanges dirty={dirty} />
-      <div className="eyebrow">
-        {tower ? "TORRE / ACOMPANHAMENTO" : "ADMINISTRATIVO / TRATAMENTO"}
-      </div>
+      <div className="eyebrow">ADMINISTRATIVO / POA</div>
       <PageHeader
-        title={tower ? "Acompanhamento da torre" : "Central de pendências"}
-        subtitle={
-          tower
-            ? "Acompanhe localizações, retornos e confirmações sem perder o histórico do caso."
-            : "Da divergência à resolução: contexto da carga, responsável e próxima providência."
-        }
+        title="Faltas e divergências"
+        subtitle="Verifique as localizações e registre a próxima providência."
       />
       <div className="segment-tabs">
         {(
@@ -129,7 +126,7 @@ export function CaseCenter({ tower = false }: { tower?: boolean }) {
       </div>
       <div className="case-layout">
         <Panel
-          title={tower ? "Fila de acompanhamento" : "Pendências da operação"}
+          title="Pendências em aberto"
           actions={<span className="muted">{rows.length} registros</span>}
           flush
         >
@@ -154,6 +151,9 @@ export function CaseCenter({ tower = false }: { tower?: boolean }) {
                     </button>
                     <div className="cell-sub">{c.cliente}</div>
                     <div className="cell-sub">{c.conferencia}</div>
+                    {c.discoveries?.some((d) => d.state === "pending") && (
+                      <span className="validation-flag">Localização para validar</span>
+                    )}
                   </td>
                   <td>
                     <StatusPill map={nfMap} value={c.tipo} />
@@ -172,12 +172,7 @@ export function CaseCenter({ tower = false }: { tower?: boolean }) {
           </div>
         </Panel>
         {current && (
-          <CaseDetail
-            key={`${current.id}-${revision}`}
-            item={current}
-            tower={tower}
-            onDirty={setDirty}
-          />
+          <CaseDetail key={`${current.id}-${revision}`} item={current} onDirty={setDirty} />
         )}
       </div>
       <Dialog
@@ -212,21 +207,14 @@ export function CaseCenter({ tower = false }: { tower?: boolean }) {
     </>
   );
 }
-function CaseDetail({
-  item,
-  tower,
-  onDirty,
-}: {
-  item: Case;
-  tower: boolean;
-  onDirty: (dirty: boolean) => void;
-}) {
+function CaseDetail({ item, onDirty }: { item: Case; onDirty: (dirty: boolean) => void }) {
   const { state, updateCase } = useOperations();
   const n = state.notes.find(
     (n) =>
       n.conferencia === item.conferencia && (item.noteId ? n.id === item.noteId : n.nf === item.nf),
   );
   const original = item.registroOriginal;
+  const [discoveryDirty, setDiscoveryDirty] = useState(false);
   const events = state.history.filter((e) => e.ref === item.id || (e.notaId && e.notaId === n?.id));
   const [owner, setOwner] = useState(item.responsavel || ""),
     [status, setStatus] = useState<OcStatus>(item.status),
@@ -245,8 +233,8 @@ function CaseDetail({
       reason !== (item.justificativa || "") ||
       receipt);
   useEffect(() => {
-    onDirty(dirty);
-  }, [dirty, onDirty]);
+    onDirty(dirty || discoveryDirty);
+  }, [dirty, discoveryDirty, onDirty]);
   useEffect(() => () => onDirty(false), [onDirty]);
   function save() {
     setError("");
@@ -258,22 +246,27 @@ function CaseDetail({
       setError("O encerramento exige uma justificativa.");
       return;
     }
-    if (status === "resolvida" && tower && !receipt) {
+    if (status === "resolvida" && !receipt) {
       setError("Confirme a verificação do recebimento antes de resolver.");
       return;
     }
-    updateCase(item.id, {
-      responsavel: owner,
-      status,
-      providencia: action,
-      codigoOficial: code.trim(),
-      justificativa: reason,
-      proximaAcao: status === "resolvida" ? "Encerrada com justificativa" : action,
-      ...(receipt ? { recebimentoConfirmado: true } : {}),
-    });
+    try {
+      updateCase(item.id, {
+        responsavel: owner,
+        status,
+        providencia: action,
+        codigoOficial: code.trim(),
+        justificativa: reason,
+        proximaAcao: status === "resolvida" ? "Encerrada com justificativa" : action,
+        ...(receipt ? { recebimentoConfirmado: true } : {}),
+      });
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
     setCode(code.trim());
     setReceipt(false);
-    toast.success("Tratamento registrado nesta sessão de demonstração.");
+    toast.success("Tratamento registrado neste aparelho de teste.");
   }
   const draft =
     "Assunto: Divergência de recebimento · NF " +
@@ -313,6 +306,7 @@ function CaseDetail({
           <StatusPill map={ocMap} value={item.status} />
         </div>
       </header>
+      <DiscoveryReview item={item} onDirty={setDiscoveryDirty} />
       <div className="detail-section">
         <h3>Última contagem da nota</h3>
         <div className="detail-grid">
@@ -349,7 +343,8 @@ function CaseDetail({
             encerramento com justificativa.
           </p>
         )}
-        <p className="muted mt-2">Evidências: nenhum arquivo disponível nesta demonstração.</p>
+        {n?.produtos && <p className="product-record">Produtos: {productSummary(n.produtos)}</p>}
+        <EvidencePhotos photos={n?.photos || []} />
         {state.operations.some((o) => o.id === item.conferencia) && (
           <Link
             to="/conferencias/$id"
@@ -360,8 +355,8 @@ function CaseDetail({
           </Link>
         )}
       </div>
-      <div className="detail-section">
-        <h3>Registro que abriu a pendência</h3>
+      <details className="detail-section">
+        <summary>Registro que abriu a pendência</summary>
         {original ? (
           <>
             <p>
@@ -382,7 +377,7 @@ function CaseDetail({
             a contagem e a observação de abertura.
           </p>
         )}
-      </div>
+      </details>
       <div className="detail-section space-y-3">
         <h3>Providências e acompanhamento</h3>
         <label className="field-group">
@@ -394,7 +389,14 @@ function CaseDetail({
             className="field"
           >
             <option value="">Selecionar responsável</option>
-            {["Ana P.", "Bruno T.", "Torre"].map((p) => (
+            {owner === "Torre" && (
+              <option value="Torre" disabled>
+                Responsável legado · reatribuir
+              </option>
+            )}
+            {[
+              ...new Set(["Ana P.", "Bruno T.", ...(owner && owner !== "Torre" ? [owner] : [])]),
+            ].map((p) => (
               <option key={p}>{p}</option>
             ))}
           </select>
@@ -458,7 +460,7 @@ function CaseDetail({
                 placeholder="O que foi localizado ou confirmado?"
               />
             </label>
-            {tower && status === "resolvida" && !closed && (
+            {status === "resolvida" && !closed && (
               <label className="flex items-start gap-2 text-xs">
                 <input
                   type="checkbox"
@@ -525,7 +527,7 @@ function CaseDetail({
         )}
         {item.recebimentoConfirmado && (
           <p className="info-strip mt-3">
-            Verificação do recebimento ou resolução confirmada manualmente pela torre.
+            Verificação do recebimento ou resolução confirmada manualmente pela equipe.
           </p>
         )}
         <details className="mt-4 case-audit">
@@ -542,7 +544,7 @@ function CaseDetail({
               ))}
             </ol>
           ) : (
-            <p className="muted mt-2">Nenhuma alteração registrada nesta sessão.</p>
+            <p className="muted mt-2">Nenhuma alteração registrada neste aparelho.</p>
           )}
         </details>
         <p className="muted mt-4 flex gap-2 leading-relaxed">

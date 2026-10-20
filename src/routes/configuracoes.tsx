@@ -53,8 +53,8 @@ function Page() {
         >
           <Row
             title="Persistência"
-            text="Alterações compartilhadas entre telas durante esta página aberta. Recarregar reinicia a amostra."
-            value={<Pill tone="warning">Sessão local</Pill>}
+            text="Teste salvo neste navegador. Não compartilha dados com outros aparelhos; limpar os dados do navegador apaga estes registros."
+            value={<Pill tone="warning">Aparelho local</Pill>}
           />
           <Row
             title="Autenticação e permissões"
@@ -63,7 +63,7 @@ function Page() {
           />
           <Row
             title="Auditoria"
-            text="Histórico visível na sessão. Armazenamento imutável ainda não conectado."
+            text="Histórico local preservado entre recargas. Auditoria protegida no servidor ainda não conectada."
             value={<Pill tone="neutral">Etapa 4</Pill>}
           />
         </Panel>

@@ -14,7 +14,7 @@ export function OperationTable({ rows }: { rows: Operation[] }) {
       />
     );
   return (
-    <DataTable head={["Operação / origem", "Veículo / chegada", "Conferência", "Situação", "Ação"]}>
+    <DataTable head={["Carreta / origem", "Doca / chegada", "Conferência", "Situação", "Ação"]}>
       {rows.map((c) => {
         const notes = state.notes.filter((n) => n.conferencia === c.id),
           done = notes.filter((n) => n.status !== "pendente" && n.encontrados !== null).length;
@@ -23,15 +23,13 @@ export function OperationTable({ rows }: { rows: Operation[] }) {
           <tr key={c.id}>
             <td>
               <Link to="/conferencias/$id" params={{ id: c.id }} className="cell-primary">
-                {c.id}
+                {c.placa}
               </Link>
               <div className="cell-sub">{c.origem} → POA</div>
             </td>
             <td>
-              <span className="font-mono text-xs">{c.placa}</span>
-              <div className="cell-sub">
-                {c.chegada} · {c.doca || "Sem doca"}
-              </div>
+              <span className="font-mono text-xs">{c.doca || "Sem doca"}</span>
+              <div className="cell-sub">{c.chegada}</div>
             </td>
             <td>
               <div className="progress-cell">

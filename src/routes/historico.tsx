@@ -53,7 +53,7 @@ function Page() {
         }
       />
       <div className="info-strip mb-5">
-        Histórico de demonstração. As alterações realizadas nesta sessão preservam os valores
+        Histórico de demonstração. As alterações realizadas neste aparelho preservam os valores
         anteriores; a auditoria durável e protegida será implementada no backend.
       </div>
       <div className="toolbar">

@@ -23,7 +23,6 @@ const roles = [
     "Recebimento e tratamento",
     "Operações, importação, pendências e comunicações",
   ],
-  ["Torre operacional", "Acompanhamento", "Localizações e confirmações autorizadas"],
   ["Administrador", "Gestão do sistema", "Usuários, permissões, parâmetros e auditoria"],
 ] as const;
 function Page() {
@@ -31,6 +30,7 @@ function Page() {
     [role, setRole] = useState("");
   const rows = usuarios.filter(
     (u) =>
+      u.perfil !== "Torre operacional" &&
       (!role || u.perfil === role) &&
       [u.nome, u.email].join(" ").toLowerCase().includes(q.toLowerCase()),
   );

@@ -19,6 +19,8 @@ import { canFinish, needsCount, noteError, type Note, type NoteInput } from "@/l
 import type { NfStatus } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 import { UnsavedChanges } from "@/components/unsaved-changes";
+import { EvidencePhotos } from "@/components/evidence-photos";
+import { productSummary } from "@/lib/product-count";
 import { CountCalculator } from "@/components/count-calculator";
 export const Route = createFileRoute("/conferencias/$id")({
   validateSearch: (s: Record<string, unknown>): { nota?: string } =>
@@ -100,7 +102,7 @@ function Workbench({ id, initialNote }: { id: string; initialNote: string | unde
                 title={dirty ? "Salve a contagem antes de pausar." : undefined}
                 onClick={() => {
                   changeOperation(id, "pausada");
-                  toast.success("Conferência pausada. Registros mantidos nesta sessão.");
+                  toast.success("Conferência pausada. Registros mantidos neste aparelho.");
                 }}
               >
                 <Pause size={14} />
@@ -289,7 +291,7 @@ function Workbench({ id, initialNote }: { id: string; initialNote: string | unde
             divergência ou localização pendente.
           </div>
           <p className="muted">
-            Esta ação será registrada somente na sessão de demonstração. Nenhuma ocorrência oficial
+            Esta ação será registrada somente neste aparelho de teste. Nenhuma ocorrência oficial
             será lançada.
           </p>
           <div className="flex justify-end gap-2">
@@ -300,7 +302,7 @@ function Workbench({ id, initialNote }: { id: string; initialNote: string | unde
               onClick={() => {
                 changeOperation(id, "concluida");
                 setFinish(false);
-                toast.success("Conferência finalizada nesta sessão.");
+                toast.success("Conferência finalizada neste aparelho.");
               }}
             >
               Confirmar finalização
@@ -331,8 +333,12 @@ function NoteEditor({
     [error, setError] = useState("");
   const countRef = useRef<HTMLInputElement>(null);
   const [calculation, setCalculation] = useState(note.calculo || "");
+  const [products, setProducts] = useState(note.produtos);
+  const [photos, setPhotos] = useState(note.photos || []);
   const delta = quantity === "" ? null : Number(quantity) - note.previstos;
   const dirty =
+    JSON.stringify(products) !== JSON.stringify(note.produtos) ||
+    JSON.stringify(photos) !== JSON.stringify(note.photos || []) ||
     quantity !== (note.encontrados === null ? "" : String(note.encontrados)) ||
     status !== note.status ||
     observation !== note.observacao ||
@@ -349,12 +355,19 @@ function NoteEditor({
       status,
       observacao: observation,
       calculo: calculation,
+      produtos: products,
+      photos,
     };
     const issue = noteError(input, note.previstos);
     setError(issue);
     if (issue) return;
-    record(note.id, input);
-    toast.success("NF " + note.nf + " registrada na sessão.");
+    try {
+      record(note.id, input);
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
+    toast.success("NF " + note.nf + " registrada neste aparelho.");
     if (advance) onNext(true);
   }
   const options: [NfStatus, string][] = [
@@ -425,6 +438,9 @@ function NoteEditor({
               </div>
             </div>
             <CountCalculator
+              expectedVolumes={note.previstos}
+              products={products}
+              onApplyProducts={setProducts}
               onApply={(count, expression) => {
                 setQuantity(String(count));
                 setCalculation(expression);
@@ -443,6 +459,11 @@ function NoteEditor({
                 Conta utilizada: {calculation} = {quantity}
               </p>
             )}
+            {products && <p className="product-record">Produtos: {productSummary(products)}</p>}
+            <details className="field-details">
+              <summary>Fotos ({photos.length})</summary>
+              <EvidencePhotos photos={photos} onChange={setPhotos} />
+            </details>
             <span className="field-label">Resultado da conferência</span>
             <div className="result-options">
               {options.map(([v, l]) => (

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dial
 import { Btn } from "./ui-kit";
 
 /** Navigation protection only; this is not persistence or a security boundary. */
-export function UnsavedChanges({ dirty }: { dirty: boolean }) {
+export function UnsavedChanges({ dirty, onDiscard }: { dirty: boolean; onDiscard?: () => void }) {
   const blocker = useBlocker({
     shouldBlockFn: () => dirty,
     withResolver: true,
@@ -25,7 +25,14 @@ export function UnsavedChanges({ dirty }: { dirty: boolean }) {
           <Btn variant="outline" onClick={() => blocker.reset?.()}>
             Continuar editando
           </Btn>
-          <Btn onClick={() => blocker.proceed?.()}>Descartar e sair</Btn>
+          <Btn
+            onClick={() => {
+              onDiscard?.();
+              blocker.proceed?.();
+            }}
+          >
+            Descartar e sair
+          </Btn>
         </div>
       </DialogContent>
     </Dialog>

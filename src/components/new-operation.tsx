@@ -56,19 +56,25 @@ export function NewOperation({
       setError("NF repetida nesta relação. Revise as linhas antes de confirmar.");
       return;
     }
-    const id = addOperation(
-      {
-        ...data,
-        placa: data.placa.trim().toUpperCase(),
-        responsavel: data.responsavel || "Não atribuído",
-      },
-      rows.map((n) => ({ ...n, nf: n.nf.trim() })),
-    );
+    let id: string;
+    try {
+      id = addOperation(
+        {
+          ...data,
+          placa: data.placa.trim().toUpperCase(),
+          responsavel: data.responsavel || "Não atribuído",
+        },
+        rows.map((n) => ({ ...n, nf: n.nf.trim() })),
+      );
+    } catch (error) {
+      setError((error as Error).message);
+      return;
+    }
     onOpenChange(false);
     setStep(1);
     setRows([blank()]);
     setData({ origem: "", placa: "", motorista: "", doca: "", responsavel: "", chegada: "" });
-    toast.success("Operação criada nesta sessão de demonstração.");
+    toast.success("Operação criada neste aparelho de teste.");
     navigate({ to: "/conferencias/$id", params: { id } });
   }
   return (
@@ -80,7 +86,7 @@ export function NewOperation({
             : "Nova operação de recebimento"}
         </DialogTitle>
         <DialogDescription>
-          Cadastro de demonstração · os dados serão descartados ao recarregar a página.
+          Cadastro de teste salvo neste navegador · não sincroniza entre aparelhos.
         </DialogDescription>
         {initialMethod === "pdf" && (
           <div className="pdf-workflow">
@@ -101,7 +107,7 @@ export function NewOperation({
             </ol>
             <p className="info-strip">
               <Info size={17} />A leitura do PDF ainda não está disponível. O próximo passo é
-              validar um modelo real da relação e conectar a extração e o armazenamento.
+              implementar a extração com revisão humana e conectar o armazenamento protegido.
             </p>
           </div>
         )}

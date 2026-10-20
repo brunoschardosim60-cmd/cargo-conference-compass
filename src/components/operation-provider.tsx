@@ -1,29 +1,99 @@
-import { useState, type ReactNode } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { OperationContext } from "@/lib/operation-context";
 import {
   canFinish,
   createDemoState,
   saveNote,
+  reportDiscovery,
+  decideDiscovery,
+  type Evidence,
   type State,
   type NoteInput,
   type Case,
   type Operation,
 } from "@/lib/operation-model";
 import type { NotaFiscal } from "@/lib/demo-data";
+import { loadWorkspace, persistWorkspace } from "@/lib/local-workspace";
+import { toast } from "sonner";
 
 const actor = "Ana P. · demonstração";
 const timestamp = () => new Date().toLocaleString("sv-SE", { timeZone: "America/Sao_Paulo" });
 export function OperationProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(createDemoState);
+  const current = useRef(state);
+  const raw = useRef<string | null>(null);
+  const [ready, setReady] = useState(false);
+  const [storageError, setStorageError] = useState("");
+  useEffect(() => {
+    try {
+      const saved = loadWorkspace();
+      raw.current = saved.raw;
+      if (saved.state) {
+        current.current = saved.state;
+        setState(saved.state);
+      }
+      setReady(true);
+    } catch {
+      setStorageError(
+        "Não foi possível abrir os dados deste aparelho. Eles foram preservados. Libere o armazenamento do navegador ou tente novamente.",
+      );
+    }
+  }, []);
+  function commit(reducer: (state: State) => State) {
+    try {
+      if (!ready) throw new Error("Aguarde a leitura dos registros locais.");
+      const updated = reducer(current.current);
+      if (updated === current.current) return;
+      raw.current = persistWorkspace(updated, raw.current);
+      current.current = updated;
+      setState(updated);
+      setStorageError("");
+    } catch (error) {
+      const message =
+        error instanceof Error && error.name !== "QuotaExceededError"
+          ? error.message
+          : "Armazenamento cheio ou indisponível. O registro não foi salvo; reduza as fotos e tente novamente.";
+      setStorageError(message);
+      toast.error(message);
+      throw new Error(message);
+    }
+  }
+  function reportFound(caseId: string, quantity: number, description: string, photos: Evidence[]) {
+    commit((s) =>
+      reportDiscovery(s, caseId, {
+        id: crypto.randomUUID(),
+        quantity,
+        description: description.trim(),
+        photos,
+        actor,
+        at: timestamp(),
+        state: "pending",
+      }),
+    );
+  }
+  function validateFound(caseId: string, reportId: string, accepted: boolean, reason: string) {
+    commit((s) =>
+      decideDiscovery(
+        s,
+        caseId,
+        reportId,
+        accepted,
+        reason,
+        actor,
+        timestamp(),
+        crypto.randomUUID(),
+      ),
+    );
+  }
   function record(id: string, input: NoteInput) {
     const now = timestamp(),
       uid = crypto.randomUUID();
-    setState((s) => saveNote(s, id, input, actor, now, uid));
+    commit((s) => saveNote(s, id, input, actor, now, uid));
   }
   function changeOperation(id: string, status: Operation["status"]) {
     const now = timestamp(),
       uid = crypto.randomUUID();
-    setState((s) => {
+    commit((s) => {
       const current = s.operations.find((o) => o.id === id);
       if (!current || current.status === status || status === "aguardando") return s;
       if (status === "concluida" && (current.status !== "em_andamento" || !canFinish(s, id)))
@@ -59,7 +129,7 @@ export function OperationProvider({ children }: { children: ReactNode }) {
   function updateCase(id: string, patch: Partial<Case>) {
     const now = timestamp(),
       uid = crypto.randomUUID();
-    setState((s) => {
+    commit((s) => {
       const before = s.cases.find((c) => c.id === id);
       if (
         !before ||
@@ -69,7 +139,13 @@ export function OperationProvider({ children }: { children: ReactNode }) {
           !patch.justificativa?.trim())
       )
         return s;
-      const updated = { ...before, ...patch };
+      if (
+        patch.status &&
+        ["resolvida", "cancelada"].includes(patch.status) &&
+        before.discoveries?.some((d) => d.state === "pending")
+      )
+        throw new Error("Valide as localizações informadas antes de encerrar a pendência.");
+      const updated = { ...before, ...patch, updatedAt: now };
       if (Object.entries(patch).every(([key, value]) => before[key as keyof Case] === value))
         return s;
       return {
@@ -108,7 +184,7 @@ export function OperationProvider({ children }: { children: ReactNode }) {
       status: "pendente" as const,
       observacao: "",
     }));
-    setState((s) => ({
+    commit((s) => ({
       ...s,
       operations: [
         {
@@ -138,8 +214,29 @@ export function OperationProvider({ children }: { children: ReactNode }) {
     return id;
   }
   return (
-    <OperationContext.Provider value={{ state, record, changeOperation, updateCase, addOperation }}>
-      {children}
+    <OperationContext.Provider
+      value={{
+        state,
+        record,
+        changeOperation,
+        updateCase,
+        addOperation,
+        reportFound,
+        validateFound,
+      }}
+    >
+      {storageError && (
+        <div role="alert" className="storage-error">
+          {storageError}
+        </div>
+      )}
+      {ready ? (
+        children
+      ) : (
+        <p role="status" className="storage-loading">
+          Abrindo registros deste aparelho…
+        </p>
+      )}
     </OperationContext.Provider>
   );
 }

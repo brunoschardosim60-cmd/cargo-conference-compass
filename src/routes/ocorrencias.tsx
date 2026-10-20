@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { CaseCenter } from "@/components/case-center";
-import { meta } from "@/lib/meta";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+// Preserve old bookmarks without retaining a separate tower workflow.
 export const Route = createFileRoute("/ocorrencias")({
-  head: () => meta("Acompanhamento da torre", "Localizações, retornos e resolução de pendências."),
-  component: () => <CaseCenter tower />,
+  beforeLoad: () => {
+    throw redirect({ to: "/pendencias", replace: true });
+  },
 });

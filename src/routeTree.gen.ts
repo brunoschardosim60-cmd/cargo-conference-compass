@@ -21,6 +21,7 @@ import { Route as ConferenciasIndexRouteImport } from './routes/conferencias.ind
 import { Route as ConferenciasIdRouteImport } from './routes/conferencias.$id'
 import { Route as ConferirIndexRouteImport } from './routes/conferir.index'
 import { Route as ConferirIdRouteImport } from './routes/conferir.$id'
+import { Route as ConferirFaltasRouteImport } from './routes/conferir.faltas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const ConferirIdRoute = ConferirIdRouteImport.update({
   path: '/conferir/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConferirFaltasRoute = ConferirFaltasRouteImport.update({
+  id: '/conferir/faltas',
+  path: '/conferir/faltas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
   '/conferir/$id': typeof ConferirIdRoute
+  '/conferir/faltas': typeof ConferirFaltasRoute
   '/conferencias/': typeof ConferenciasIndexRoute
   '/conferir/': typeof ConferirIndexRoute
 }
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
   '/conferir/$id': typeof ConferirIdRoute
+  '/conferir/faltas': typeof ConferirFaltasRoute
   '/conferencias': typeof ConferenciasIndexRoute
   '/conferir': typeof ConferirIndexRoute
 }
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
   '/conferir/$id': typeof ConferirIdRoute
+  '/conferir/faltas': typeof ConferirFaltasRoute
   '/conferencias/': typeof ConferenciasIndexRoute
   '/conferir/': typeof ConferirIndexRoute
 }
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/usuarios'
     | '/conferencias/$id'
     | '/conferir/$id'
+    | '/conferir/faltas'
     | '/conferencias/'
     | '/conferir/'
   fileRoutesByTo: FileRoutesByTo
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/usuarios'
     | '/conferencias/$id'
     | '/conferir/$id'
+    | '/conferir/faltas'
     | '/conferencias'
     | '/conferir'
   id:
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/usuarios'
     | '/conferencias/$id'
     | '/conferir/$id'
+    | '/conferir/faltas'
     | '/conferencias/'
     | '/conferir/'
   fileRoutesById: FileRoutesById
@@ -182,6 +194,7 @@ export interface RootRouteChildren {
   UsuariosRoute: typeof UsuariosRoute
   ConferenciasIdRoute: typeof ConferenciasIdRoute
   ConferirIdRoute: typeof ConferirIdRoute
+  ConferirFaltasRoute: typeof ConferirFaltasRoute
   ConferenciasIndexRoute: typeof ConferenciasIndexRoute
   ConferirIndexRoute: typeof ConferirIndexRoute
 }
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConferirIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conferir/faltas': {
+      id: '/conferir/faltas'
+      path: '/conferir/faltas'
+      fullPath: '/conferir/faltas'
+      preLoaderRoute: typeof ConferirFaltasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -286,6 +306,7 @@ const rootRouteChildren: RootRouteChildren = {
   UsuariosRoute: UsuariosRoute,
   ConferenciasIdRoute: ConferenciasIdRoute,
   ConferirIdRoute: ConferirIdRoute,
+  ConferirFaltasRoute: ConferirFaltasRoute,
   ConferenciasIndexRoute: ConferenciasIndexRoute,
   ConferirIndexRoute: ConferirIndexRoute,
 }

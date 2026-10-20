@@ -6,7 +6,6 @@ import {
   FileText,
   AlertTriangle,
   PackageSearch,
-  Radio,
   History,
   Users,
   Settings,
@@ -27,15 +26,13 @@ const groups = [
     items: [
       { to: "/", label: "Recebimento", icon: LayoutDashboard },
       { to: "/conferencias", label: "Conferências", icon: ClipboardCheck },
-      { to: "/notas", label: "Notas fiscais", icon: FileText },
     ],
   },
   {
     label: "ACOMPANHAMENTO",
     items: [
-      { to: "/pendencias", label: "Central de pendências", icon: AlertTriangle },
+      { to: "/pendencias", label: "Faltas e divergências", icon: AlertTriangle },
       { to: "/extraviados", label: "Outras praças", icon: PackageSearch },
-      { to: "/ocorrencias", label: "Acompanhamento da torre", icon: Radio },
     ],
   },
   {
@@ -119,6 +116,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         ))}
       </nav>
+      <Link to="/notas" className="nav-item">
+        <FileText size={17} />
+        Consultar notas
+      </Link>
       <div className="sidebar-footer">
         <span className="avatar">AP</span>
         <div>
@@ -148,15 +149,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         </header>
         <div className="field-demo">
-          <span>DEMONSTRAÇÃO</span> Dados de teste · sem salvamento permanente
+          <span>DEMONSTRAÇÃO</span> Teste local · não sincroniza entre aparelhos
         </div>
         <main id="main" tabIndex={-1}>
           {children}
         </main>
-        <footer className="field-footer">
-          <span>POA / RECEBIMENTO</span>
-          <span>Relação digital de carga</span>
-        </footer>
+        <nav className="field-bottom-nav" aria-label="Tarefas do conferente">
+          <Link to="/conferir" className={path !== "/conferir/faltas" ? "active" : ""}>
+            <ClipboardCheck size={21} />
+            Conferir cargas
+          </Link>
+          <Link to="/conferir/faltas" className={path === "/conferir/faltas" ? "active" : ""}>
+            <PackageSearch size={21} />
+            Consultar faltas
+          </Link>
+        </nav>
       </div>
     );
   return (
@@ -202,7 +209,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="demo-banner">
           <span className="demo-label">DEMONSTRAÇÃO</span>
           <span>
-            Dados fictícios · alterações mantidas apenas enquanto esta página estiver aberta.
+            Dados de teste salvos neste navegador · sem login ou sincronização entre aparelhos.
           </span>
           <Link to="/configuracoes">
             Sobre este ambiente <ArrowUpRight size={13} />

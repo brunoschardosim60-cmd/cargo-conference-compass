@@ -126,8 +126,9 @@ describe("Conferência por cliente no celular", () => {
     fireEvent.click(screen.getByRole("button", { name: "Salvar e continuar" }));
     await screen.findByRole("heading", { name: "Clientes da carga" });
     fireEvent.click(screen.getByRole("link", { name: "Ir ao administrativo" }));
-    await screen.findByRole("heading", { name: "Central de pendências" });
+    await screen.findByRole("heading", { name: "Faltas e divergências" });
     expect(screen.getByText("10 / 10")).toBeInTheDocument();
+    fireEvent.click(screen.getByText("Registro que abriu a pendência"));
     expect(screen.getByText(/9 encontrados \/ 10 previstos/)).toBeInTheDocument();
     expect(screen.getByText("Conta original: 4 + 5")).toBeInTheDocument();
     expect(screen.getByText(/A contagem foi corrigida para sem divergência/)).toBeInTheDocument();
