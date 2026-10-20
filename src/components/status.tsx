@@ -27,13 +27,13 @@ export const confMap: Record<ConfStatus, [string, Tone]> = {
   aguardando: ["Aguardando início", "neutral"],
 };
 export const nfMap: Record<NfStatus, [string, Tone]> = {
-  pendente: ["Não conferida", "neutral"],
+  pendente: ["A conferir", "neutral"],
   conferida: ["Conferida", "success"],
-  falta: ["Falta de volumes", "danger"],
+  falta: ["Falta confirmada", "danger"],
   avaria: ["Avaria", "danger"],
   excedente: ["Excedente", "warning"],
-  divergencia: ["Divergência de identificação", "warning"],
-  localizacao: ["Pendente de localização", "warning"],
+  divergencia: ["Não identificado", "warning"],
+  localizacao: ["A localizar", "warning"],
 };
 export const ocMap: Record<OcStatus, [string, Tone]> = {
   nova: ["Nova", "danger"],
