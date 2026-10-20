@@ -17,8 +17,11 @@ import { Route as NotasRouteImport } from './routes/notas'
 import { Route as OcorrenciasRouteImport } from './routes/ocorrencias'
 import { Route as PendenciasRouteImport } from './routes/pendencias'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
+import { Route as CampoIndexRouteImport } from './routes/campo.index'
 import { Route as ConferenciasIndexRouteImport } from './routes/conferencias.index'
 import { Route as ConferenciasIdRouteImport } from './routes/conferencias.$id'
+import { Route as CampoIdIndexRouteImport } from './routes/campo.$id.index'
+import { Route as CampoIdClienteRouteImport } from './routes/campo.$id.$cliente'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -60,6 +63,11 @@ const UsuariosRoute = UsuariosRouteImport.update({
   path: '/usuarios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampoIndexRoute = CampoIndexRouteImport.update({
+  id: '/campo/',
+  path: '/campo/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConferenciasIndexRoute = ConferenciasIndexRouteImport.update({
   id: '/conferencias/',
   path: '/conferencias/',
@@ -68,6 +76,16 @@ const ConferenciasIndexRoute = ConferenciasIndexRouteImport.update({
 const ConferenciasIdRoute = ConferenciasIdRouteImport.update({
   id: '/conferencias/$id',
   path: '/conferencias/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampoIdIndexRoute = CampoIdIndexRouteImport.update({
+  id: '/campo/$id/',
+  path: '/campo/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampoIdClienteRoute = CampoIdClienteRouteImport.update({
+  id: '/campo/$id/$cliente',
+  path: '/campo/$id/$cliente',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -81,7 +99,10 @@ export interface FileRoutesByFullPath {
   '/pendencias': typeof PendenciasRoute
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
+  '/campo/': typeof CampoIndexRoute
   '/conferencias/': typeof ConferenciasIndexRoute
+  '/campo/$id/$cliente': typeof CampoIdClienteRoute
+  '/campo/$id/': typeof CampoIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,7 +114,10 @@ export interface FileRoutesByTo {
   '/pendencias': typeof PendenciasRoute
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
+  '/campo': typeof CampoIndexRoute
   '/conferencias': typeof ConferenciasIndexRoute
+  '/campo/$id/$cliente': typeof CampoIdClienteRoute
+  '/campo/$id': typeof CampoIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -106,7 +130,10 @@ export interface FileRoutesById {
   '/pendencias': typeof PendenciasRoute
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
+  '/campo/': typeof CampoIndexRoute
   '/conferencias/': typeof ConferenciasIndexRoute
+  '/campo/$id/$cliente': typeof CampoIdClienteRoute
+  '/campo/$id/': typeof CampoIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,7 +147,10 @@ export interface FileRouteTypes {
     | '/pendencias'
     | '/usuarios'
     | '/conferencias/$id'
+    | '/campo/'
     | '/conferencias/'
+    | '/campo/$id/$cliente'
+    | '/campo/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,7 +162,10 @@ export interface FileRouteTypes {
     | '/pendencias'
     | '/usuarios'
     | '/conferencias/$id'
+    | '/campo'
     | '/conferencias'
+    | '/campo/$id/$cliente'
+    | '/campo/$id'
   id:
     | '__root__'
     | '/'
@@ -144,7 +177,10 @@ export interface FileRouteTypes {
     | '/pendencias'
     | '/usuarios'
     | '/conferencias/$id'
+    | '/campo/'
     | '/conferencias/'
+    | '/campo/$id/$cliente'
+    | '/campo/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,7 +193,10 @@ export interface RootRouteChildren {
   PendenciasRoute: typeof PendenciasRoute
   UsuariosRoute: typeof UsuariosRoute
   ConferenciasIdRoute: typeof ConferenciasIdRoute
+  CampoIndexRoute: typeof CampoIndexRoute
   ConferenciasIndexRoute: typeof ConferenciasIndexRoute
+  CampoIdClienteRoute: typeof CampoIdClienteRoute
+  CampoIdIndexRoute: typeof CampoIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -218,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UsuariosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/campo/': {
+      id: '/campo/'
+      path: '/campo'
+      fullPath: '/campo/'
+      preLoaderRoute: typeof CampoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conferencias/': {
       id: '/conferencias/'
       path: '/conferencias'
@@ -230,6 +276,20 @@ declare module '@tanstack/react-router' {
       path: '/conferencias/$id'
       fullPath: '/conferencias/$id'
       preLoaderRoute: typeof ConferenciasIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campo/$id/': {
+      id: '/campo/$id/'
+      path: '/campo/$id'
+      fullPath: '/campo/$id/'
+      preLoaderRoute: typeof CampoIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campo/$id/$cliente': {
+      id: '/campo/$id/$cliente'
+      path: '/campo/$id/$cliente'
+      fullPath: '/campo/$id/$cliente'
+      preLoaderRoute: typeof CampoIdClienteRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -245,7 +305,10 @@ const rootRouteChildren: RootRouteChildren = {
   PendenciasRoute: PendenciasRoute,
   UsuariosRoute: UsuariosRoute,
   ConferenciasIdRoute: ConferenciasIdRoute,
+  CampoIndexRoute: CampoIndexRoute,
   ConferenciasIndexRoute: ConferenciasIndexRoute,
+  CampoIdClienteRoute: CampoIdClienteRoute,
+  CampoIdIndexRoute: CampoIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

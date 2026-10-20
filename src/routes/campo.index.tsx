@@ -23,6 +23,8 @@ function Page() {
   );
 }
 
+const toneText: Record<string, string> = { info: "text-info", warning: "text-warning", success: "text-success", danger: "text-danger", neutral: "text-muted-foreground" };
+
 function Section({ title, items, muted }: { title: string; items: typeof conferencias; muted?: boolean }) {
   return (
     <section>
@@ -40,7 +42,7 @@ function Section({ title, items, muted }: { title: string; items: typeof confere
                     <span className="truncate text-sm text-muted-foreground">{c.origem}</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs">
-                    <span className={`font-medium text-${tone === "neutral" ? "muted-foreground" : tone}`}>{label}</span>
+                    <span className={`font-medium ${toneText[tone]}`}>{label}</span>
                     {c.doca && <span className="text-muted-foreground">Doca {c.doca}</span>}
                     <span className="ml-auto tabular text-muted-foreground">{pct}%</span>
                   </div>
