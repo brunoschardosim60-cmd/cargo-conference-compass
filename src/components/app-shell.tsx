@@ -13,9 +13,7 @@ import {
   Search,
   Menu,
   ArrowUpRight,
-  Building2,
   ChevronRight,
-  Box,
   Smartphone,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -27,7 +25,7 @@ const groups = [
   {
     label: "OPERAÇÃO",
     items: [
-      { to: "/", label: "Visão geral", icon: LayoutDashboard },
+      { to: "/", label: "Recebimento", icon: LayoutDashboard },
       { to: "/conferencias", label: "Conferências", icon: ClipboardCheck },
       { to: "/notas", label: "Notas fiscais", icon: FileText },
     ],
@@ -78,23 +76,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const sidebar = (
     <>
       <Link to="/" className="brand" onClick={() => setMobile(false)}>
-        <span className="brand-symbol">
-          <Box size={23} />
+        <span className="brand-unit">
+          POA
+          <span />
         </span>
-        <span>
-          <strong>
-            LUFT<span className="brand-divider">/</span>POA
-          </strong>
-          <small>CONFERÊNCIA LOGÍSTICA</small>
+        <span className="brand-caption">
+          LUFT<small>CONTROLE DE CARGAS</small>
         </span>
       </Link>
       <div className="branch">
-        <Building2 size={17} />
         <div>
           <span>Porto Alegre</span>
-          <small>Unidade operacional · RS</small>
+          <small>Recebimento & conferência</small>
         </div>
-        <span className="branch-dot" />
       </div>
       <nav className="nav-groups" aria-label="Navegação principal">
         {groups.map((g) => (
@@ -143,13 +137,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </a>
         <header className="field-topbar">
           <Link to="/conferir" className="field-brand">
-            <Box size={21} />
             <strong>
-              LUFT <span>/ POA</span>
+              POA
+              <span className="unit-mark" />
             </strong>
+            <span className="field-brand-caption">LUFT / CONFERÊNCIA</span>
           </Link>
           <Link to="/conferencias" className="field-admin-link">
-            Administrativo <ArrowUpRight size={14} />
+            Adm. <ArrowUpRight size={14} />
           </Link>
         </header>
         <div className="field-demo">
@@ -158,7 +153,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main id="main" tabIndex={-1}>
           {children}
         </main>
-        <footer className="field-footer">Conferência no pavilhão · POA</footer>
+        <footer className="field-footer">
+          <span>POA / RECEBIMENTO</span>
+          <span>Relação digital de carga</span>
+        </footer>
       </div>
     );
   return (

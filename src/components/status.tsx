@@ -15,7 +15,7 @@ export function Pill({ tone, children }: { tone: Tone; children: React.ReactNode
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-0.5 text-xs font-medium",
+        "status-pill inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm px-2 py-0.5 text-xs font-medium",
         toneCls[tone],
       )}
     >

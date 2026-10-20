@@ -4,14 +4,14 @@ Verificações realizadas em 19/10/2026, no checkout local da branch `codex/reco
 
 ## Verificações automatizadas
 
-| Verificação | Resultado |
-| --- | --- |
-| `npx tsc --noEmit` | Passou |
-| `npm test` | 29 testes passaram em 5 arquivos após a experiência móvel |
-| `npm run build` | Build de produção client/SSR/Nitro concluído |
-| ESLint nos arquivos TS/TSX novos e modificados | Zero erros; quatro avisos `react-refresh/only-export-components` nos mapas exportados pelo componente legado de status |
-| Prettier nos arquivos de implementação alterados | Aplicado |
-| `git diff --check` | Sem erros de whitespace |
+| Verificação                                      | Resultado                                                                                                              |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `npx tsc --noEmit`                               | Passou                                                                                                                 |
+| `npm test`                                       | 29 testes passaram em 5 arquivos após a experiência móvel                                                              |
+| `npm run build`                                  | Build de produção client/SSR/Nitro concluído                                                                           |
+| ESLint nos arquivos TS/TSX novos e modificados   | Zero erros; quatro avisos `react-refresh/only-export-components` nos mapas exportados pelo componente legado de status |
+| Prettier nos arquivos de implementação alterados | Aplicado                                                                                                               |
+| `git diff --check`                               | Sem erros de whitespace                                                                                                |
 
 O build emite um aviso de `vite-tsconfig-paths`: a versão instalada do Vite oferece resolução nativa. O plugin faz parte da configuração Lovable preservada; não foi removido isoladamente.
 
@@ -52,6 +52,12 @@ Durante edição com HMR, foi identificada uma recriação inconsistente do cont
 Capturas: [visão geral](screenshots/visao-geral.png) e [mesa de conferência](screenshots/conferencia.png).
 
 ## Como avaliar localmente
+
+### Revisão visual da relação de carga
+
+A tela inicial administrativa foi reorganizada em identificação da carga ativa, relação tabular de operações e fila lateral de pendências. A navegação usa uma identificação tipográfica POA, superfícies claras, divisórias e referências numéricas. A experiência móvel usa doca/placa, linhas de clientes numeradas e uma ficha de contagem com volumes previstos, pallet e praça. A identidade visual está em `src/workspace.css`, após os estilos compartilhados.
+
+Verificações desta revisão: 29 testes passaram; TypeScript e build de produção concluídos; ESLint dos arquivos alterados sem erros, com quatro avisos existentes de Fast Refresh em `status.tsx`. Chrome em 1440×900 e 391×844: sem transbordamento horizontal do documento; navegação carga → cliente → nota e confirmação de 10 volumes atualizando o progresso de 5/9 para 6/9; central administrativa renderizada sem erros no console. Esta revisão não adiciona backend, autenticação ou extração de PDF.
 
 ### Experiência do conferente no celular
 

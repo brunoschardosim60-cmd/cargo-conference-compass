@@ -6,8 +6,6 @@ import {
   Check,
   CheckCircle2,
   ChevronRight,
-  Package,
-  Truck,
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -32,9 +30,14 @@ export function FieldOperations() {
   return (
     <>
       <div className="field-page-heading">
-        <span className="eyebrow">PAVILHÃO · POA</span>
-        <h1>Qual carga vamos conferir?</h1>
-        <p>Escolha a carreta para ver os clientes.</p>
+        <span className="document-kicker">
+          <span />
+          RECEBIMENTO / PAVILHÃO
+        </span>
+        <h1>
+          Relações de carga<span>.</span>
+        </h1>
+        <p>Selecione a carreta para iniciar a contagem.</p>
       </div>
       <SearchBox placeholder="Buscar placa ou origem" value={query} onChange={setQuery} />
       <div className="field-tabs" aria-label="Situação das cargas">
@@ -51,19 +54,17 @@ export function FieldOperations() {
           const done = notes.filter((n) => !needsCount(n)).length;
           return (
             <Link key={o.id} to="/conferir/$id" params={{ id: o.id }} className="field-operation">
-              <div className="field-row">
-                <span className="field-item-icon">
-                  <Truck size={20} />
+              <div className="load-ticket">
+                <span className="load-ticket-dock">
+                  <small>DOCA</small>
+                  <strong>{o.doca || "—"}</strong>
                 </span>
                 <div className="field-row-text">
                   <strong>{o.placa}</strong>
                   <span>{o.origem} → POA</span>
+                  <StatusPill map={confMap} value={o.status} />
                 </div>
                 <ChevronRight size={19} />
-              </div>
-              <div className="field-row field-operation-meta">
-                <StatusPill map={confMap} value={o.status} />
-                <span>{o.doca || "Doca não informada"}</span>
               </div>
               <progress
                 value={done}
@@ -72,7 +73,7 @@ export function FieldOperations() {
               />
               <div className="field-row field-muted">
                 <span>
-                  {done} de {notes.length} notas
+                  <strong>{done}</strong> / {notes.length} notas conferidas
                 </span>
                 <span>{o.id}</span>
               </div>
@@ -146,7 +147,8 @@ export function FieldConference({ id }: { id: string }) {
       <div className="field-load-heading">
         <div>
           <span className="eyebrow">
-            {operation.doca || "SEM DOCA"} · {operation.placa}
+            <span className="load-dock-label">{operation.doca || "SEM DOCA"}</span>
+            <span className="load-plate-label">{operation.placa}</span>
           </span>
           <h1>{note ? `NF ${note.nf}` : client || "Clientes da carga"}</h1>
           {note && <p>{client}</p>}
@@ -225,30 +227,24 @@ export function FieldConference({ id }: { id: string }) {
             {currentGroup
               ? currentGroup.rows
                   .filter((n) => [n.nf, n.pedido].join(" ").includes(query.trim()))
-                  .map((n) => (
+                  .map((n, index) => (
                     <button className="field-client" key={n.id} onClick={() => setNoteId(n.id)}>
-                      <span
-                        className={`field-item-icon ${!needsCount(n) ? (n.status === "conferida" ? "is-done" : "has-issue") : ""}`}
-                      >
-                        {needsCount(n) ? (
-                          <Package size={19} />
-                        ) : n.status === "conferida" ? (
-                          <Check size={19} />
-                        ) : (
-                          <AlertTriangle size={19} />
-                        )}
+                      <span className="relation-line-number">
+                        {String(index + 1).padStart(2, "0")}
                       </span>
                       <span className="field-row-text">
                         <strong>NF {n.nf}</strong>
-                        <span>
-                          {n.previstos} volumes · {n.pedido || "Sem pedido"}
-                        </span>
+                        <span>{n.pedido || "Sem pedido"}</span>
                         <StatusPill map={nfMap} value={n.status} />
                       </span>
-                      <ChevronRight size={18} />
+                      <span className="relation-line-volumes">
+                        <strong>{n.previstos}</strong>
+                        <small>VOL.</small>
+                      </span>
+                      <ChevronRight size={15} />
                     </button>
                   ))
-              : clientGroups(state.notes, id, query).map((g) => (
+              : clientGroups(state.notes, id, query).map((g, index) => (
                   <button
                     className="field-client"
                     key={g.name}
@@ -257,24 +253,17 @@ export function FieldConference({ id }: { id: string }) {
                       setQuery("");
                     }}
                   >
-                    <span
-                      className={`field-item-icon ${!g.remaining ? (g.issues ? "has-issue" : "is-done") : ""}`}
-                    >
-                      {g.remaining ? (
-                        <Package size={20} />
-                      ) : g.issues ? (
-                        <AlertTriangle size={20} />
-                      ) : (
-                        <Check size={20} />
-                      )}
+                    <span className="relation-line-number">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
                     <span className="field-row-text">
                       <strong>{g.name}</strong>
                       <span>
-                        {g.rows.length} {g.rows.length === 1 ? "nota" : "notas"} · {g.expected}{" "}
-                        volumes
+                        {g.rows.length} {g.rows.length === 1 ? "nota fiscal" : "notas fiscais"}
                       </span>
-                      <small>
+                      <small
+                        className={g.remaining ? "" : g.issues ? "line-has-issue" : "line-checked"}
+                      >
                         {g.remaining
                           ? `${g.remaining} ${g.remaining === 1 ? "nota para conferir" : "notas para conferir"}`
                           : g.issues
@@ -282,7 +271,11 @@ export function FieldConference({ id }: { id: string }) {
                             : "Contagem concluída"}
                       </small>
                     </span>
-                    <ChevronRight size={18} />
+                    <span className="relation-line-volumes">
+                      <strong>{g.expected}</strong>
+                      <small>VOL.</small>
+                    </span>
+                    <ChevronRight size={15} />
                   </button>
                 ))}
           </div>
@@ -400,11 +393,30 @@ function FieldNote({
   return (
     <div className="field-count">
       <div className="field-expected">
-        <span>Volumes previstos</span>
-        <strong>{note.previstos}</strong>
-        <small>
-          {note.pallet || "Pallet não informado"} · {note.praca || "Praça não informada"}
-        </small>
+        <div className="count-sheet-title">
+          <span>RELAÇÃO DE CARGA</span>
+          <span>POA</span>
+        </div>
+        <div className="count-sheet-value">
+          <div>
+            <span>Volumes previstos</span>
+            <small>Quantidade na relação</small>
+          </div>
+          <strong>
+            {note.previstos}
+            <small>VOL.</small>
+          </strong>
+        </div>
+        <div className="count-sheet-meta">
+          <div>
+            <small>PALLET</small>
+            <strong>{note.pallet || "Não informado"}</strong>
+          </div>
+          <div>
+            <small>PRAÇA</small>
+            <strong>{note.praca || "Não informada"}</strong>
+          </div>
+        </div>
       </div>
       {!editable ? (
         <div className="field-saved">
