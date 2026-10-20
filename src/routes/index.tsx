@@ -31,7 +31,7 @@ function Dashboard() {
             ))}
           </dl>
         </div>
-        <Link to="/conferencias" search={{ importar: true } as never} className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+        <Link to="/conferencias" className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/90">
           <Upload className="size-4" />Importar relação PDF
         </Link>
       </div>
