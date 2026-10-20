@@ -13,12 +13,16 @@ import { PageHeader, Panel } from "@/components/ui-kit";
 import { OperationTable } from "@/components/operation-table";
 import { useOperations } from "@/lib/operation-context";
 import { meta } from "@/lib/meta";
+import { useHandheld } from "@/hooks/use-handheld";
+import { FieldOperations } from "@/components/field-conference";
 export const Route = createFileRoute("/")({
   head: () => meta("Visão geral", "Prioridades e operações da filial POA."),
   component: Dashboard,
 });
 function Dashboard() {
+  const handheld = useHandheld();
   const { state } = useOperations();
+  if (handheld) return <FieldOperations />;
   const metrics = [
     {
       label: "Em conferência",

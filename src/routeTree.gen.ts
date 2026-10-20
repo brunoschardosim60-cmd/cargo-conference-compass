@@ -19,6 +19,8 @@ import { Route as PendenciasRouteImport } from './routes/pendencias'
 import { Route as UsuariosRouteImport } from './routes/usuarios'
 import { Route as ConferenciasIndexRouteImport } from './routes/conferencias.index'
 import { Route as ConferenciasIdRouteImport } from './routes/conferencias.$id'
+import { Route as ConferirIndexRouteImport } from './routes/conferir.index'
+import { Route as ConferirIdRouteImport } from './routes/conferir.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +72,16 @@ const ConferenciasIdRoute = ConferenciasIdRouteImport.update({
   path: '/conferencias/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConferirIndexRoute = ConferirIndexRouteImport.update({
+  id: '/conferir/',
+  path: '/conferir/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConferirIdRoute = ConferirIdRouteImport.update({
+  id: '/conferir/$id',
+  path: '/conferir/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -81,7 +93,9 @@ export interface FileRoutesByFullPath {
   '/pendencias': typeof PendenciasRoute
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
+  '/conferir/$id': typeof ConferirIdRoute
   '/conferencias/': typeof ConferenciasIndexRoute
+  '/conferir/': typeof ConferirIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,7 +107,9 @@ export interface FileRoutesByTo {
   '/pendencias': typeof PendenciasRoute
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
+  '/conferir/$id': typeof ConferirIdRoute
   '/conferencias': typeof ConferenciasIndexRoute
+  '/conferir': typeof ConferirIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -106,7 +122,9 @@ export interface FileRoutesById {
   '/pendencias': typeof PendenciasRoute
   '/usuarios': typeof UsuariosRoute
   '/conferencias/$id': typeof ConferenciasIdRoute
+  '/conferir/$id': typeof ConferirIdRoute
   '/conferencias/': typeof ConferenciasIndexRoute
+  '/conferir/': typeof ConferirIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,7 +138,9 @@ export interface FileRouteTypes {
     | '/pendencias'
     | '/usuarios'
     | '/conferencias/$id'
+    | '/conferir/$id'
     | '/conferencias/'
+    | '/conferir/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,7 +152,9 @@ export interface FileRouteTypes {
     | '/pendencias'
     | '/usuarios'
     | '/conferencias/$id'
+    | '/conferir/$id'
     | '/conferencias'
+    | '/conferir'
   id:
     | '__root__'
     | '/'
@@ -144,7 +166,9 @@ export interface FileRouteTypes {
     | '/pendencias'
     | '/usuarios'
     | '/conferencias/$id'
+    | '/conferir/$id'
     | '/conferencias/'
+    | '/conferir/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,7 +181,9 @@ export interface RootRouteChildren {
   PendenciasRoute: typeof PendenciasRoute
   UsuariosRoute: typeof UsuariosRoute
   ConferenciasIdRoute: typeof ConferenciasIdRoute
+  ConferirIdRoute: typeof ConferirIdRoute
   ConferenciasIndexRoute: typeof ConferenciasIndexRoute
+  ConferirIndexRoute: typeof ConferirIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +258,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConferenciasIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conferir/': {
+      id: '/conferir/'
+      path: '/conferir'
+      fullPath: '/conferir/'
+      preLoaderRoute: typeof ConferirIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conferir/$id': {
+      id: '/conferir/$id'
+      path: '/conferir/$id'
+      fullPath: '/conferir/$id'
+      preLoaderRoute: typeof ConferirIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -245,7 +285,9 @@ const rootRouteChildren: RootRouteChildren = {
   PendenciasRoute: PendenciasRoute,
   UsuariosRoute: UsuariosRoute,
   ConferenciasIdRoute: ConferenciasIdRoute,
+  ConferirIdRoute: ConferirIdRoute,
   ConferenciasIndexRoute: ConferenciasIndexRoute,
+  ConferirIndexRoute: ConferirIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

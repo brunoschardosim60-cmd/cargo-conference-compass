@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, SlidersHorizontal } from "lucide-react";
+import { Plus, SlidersHorizontal, FileUp } from "lucide-react";
 import { PageHeader, Panel, SearchBox, FilterSelect, Btn } from "@/components/ui-kit";
 import { OperationTable } from "@/components/operation-table";
 import { NewOperation } from "@/components/new-operation";
@@ -16,6 +16,7 @@ function Page() {
     [status, setStatus] = useState(""),
     [owner, setOwner] = useState(""),
     [open, setOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
   const tabs = [
     ["", "Todas"],
     ["em_andamento", "Em andamento"],
@@ -36,10 +37,17 @@ function Page() {
         title="Conferências"
         subtitle="Uma operação por carreta. Relação, contagem e divergências sempre no mesmo contexto."
         actions={
-          <Btn onClick={() => setOpen(true)}>
-            <Plus size={15} />
-            Nova operação
-          </Btn>
+          <>
+            <Btn onClick={() => setPdfOpen(true)}>
+              <FileUp size={16} />
+              Importar relação PDF
+              <span className="text-[10px] opacity-75">Em preparação</span>
+            </Btn>
+            <Btn variant="outline" onClick={() => setOpen(true)}>
+              <Plus size={15} />
+              Nova operação
+            </Btn>
+          </>
         }
       />
       <div className="segment-tabs" aria-label="Filtrar operações por situação">
@@ -86,6 +94,7 @@ function Page() {
         </div>
       </Panel>
       <NewOperation open={open} onOpenChange={setOpen} />
+      <NewOperation open={pdfOpen} onOpenChange={setPdfOpen} initialMethod="pdf" />
     </>
   );
 }

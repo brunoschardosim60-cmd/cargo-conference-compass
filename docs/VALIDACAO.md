@@ -7,7 +7,7 @@ Verificações realizadas em 19/10/2026, no checkout local da branch `codex/reco
 | Verificação | Resultado |
 | --- | --- |
 | `npx tsc --noEmit` | Passou |
-| `npm test` | 26 testes passaram em 4 arquivos após a revisão |
+| `npm test` | 29 testes passaram em 5 arquivos após a experiência móvel |
 | `npm run build` | Build de produção client/SSR/Nitro concluído |
 | ESLint nos arquivos TS/TSX novos e modificados | Zero erros; quatro avisos `react-refresh/only-export-components` nos mapas exportados pelo componente legado de status |
 | Prettier nos arquivos de implementação alterados | Aplicado |
@@ -52,6 +52,14 @@ Durante edição com HMR, foi identificada uma recriação inconsistente do cont
 Capturas: [visão geral](screenshots/visao-geral.png) e [mesa de conferência](screenshots/conferencia.png).
 
 ## Como avaliar localmente
+
+### Experiência do conferente no celular
+
+Em `/conferir`, o conferente usa uma interface dedicada: cargas → destinatários → notas → contagem. A página inicial também exibe essa interface em larguras de até 720px. Isso é uma escolha de apresentação, não controle de acesso; o vínculo entre usuário autenticado e suas cargas depende do backend futuro.
+
+Agrupamento atual: destinatário, sempre dentro da operação selecionada. A lista distingue contagem concluída de contagem com divergência. A confirmação da quantidade prevista é explícita; divergências exigem quantidade e observação. Finalização, estados e auditoria usam o mesmo modelo da interface administrativa.
+
+Validação em Chrome a 390×844: lista de cargas, clientes e tela de contagem renderizadas; sem rolagem horizontal na contagem (`scrollWidth === clientWidth`). Três testes adicionais cobrem isolamento do agrupamento, confirmação com progresso atualizado e divergência com proteção do rascunho. O botão administrativo de PDF está marcado como “Em preparação” e explica envio → revisão → liberação; não lê nem envia arquivos nesta versão.
 
 1. Executar `npm install`, caso as dependências não estejam instaladas.
 2. Executar `npm run dev -- --host 127.0.0.1 --port 4173` na pasta do repositório.

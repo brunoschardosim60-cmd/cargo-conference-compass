@@ -16,10 +16,12 @@ import {
   Building2,
   ChevronRight,
   Box,
+  Smartphone,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useOperations } from "@/lib/operation-context";
 import { cn } from "@/lib/utils";
+import { useHandheld } from "@/hooks/use-handheld";
 
 const groups = [
   {
@@ -50,6 +52,7 @@ const groups = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const handheld = useHandheld();
   const { state } = useOperations();
   const [mobile, setMobile] = useState(false),
     [search, setSearch] = useState(false),
@@ -132,6 +135,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
     </>
   );
+  if (path.startsWith("/conferir") || (handheld && path === "/"))
+    return (
+      <div className="field-layout">
+        <a href="#main" className="skip-link">
+          Ir para o conteúdo
+        </a>
+        <header className="field-topbar">
+          <Link to="/conferir" className="field-brand">
+            <Box size={21} />
+            <strong>
+              LUFT <span>/ POA</span>
+            </strong>
+          </Link>
+          <Link to="/conferencias" className="field-admin-link">
+            Administrativo <ArrowUpRight size={14} />
+          </Link>
+        </header>
+        <div className="field-demo">
+          <span>DEMONSTRAÇÃO</span> Dados de teste · sem salvamento permanente
+        </div>
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
+        <footer className="field-footer">Conferência no pavilhão · POA</footer>
+      </div>
+    );
   return (
     <div className="app-layout">
       <a href="#main" className="skip-link">
@@ -167,6 +196,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span>Buscar NF, pedido ou placa</span>
           </button>
           <span className="topbar-label">Uso interno</span>
+          <Link to="/conferir" className="table-link whitespace-nowrap">
+            <Smartphone size={16} />
+            Tela do conferente
+          </Link>
         </header>
         <div className="demo-banner">
           <span className="demo-label">DEMONSTRAÇÃO</span>
