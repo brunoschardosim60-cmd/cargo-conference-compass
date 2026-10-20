@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { pdfAssetOptions } from "@/lib/pdf-assets";
+import { Btn } from "./ui-kit";
 export function PdfPreview({ file, page }: { file: File; page: number }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(true);
+  const [zoomed, setZoomed] = useState(false);
   useEffect(() => {
     let cancelled = false;
     let dispose = () => {};
@@ -15,7 +18,7 @@ export function PdfPreview({ file, page }: { file: File; page: number }) {
       pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
       const task = pdfjs.getDocument({
         data: new Uint8Array(await file.arrayBuffer()),
-        useSystemFonts: true,
+        ...pdfAssetOptions(pdfjs.version),
       });
       dispose = () => {
         void task.destroy();
@@ -31,7 +34,7 @@ export function PdfPreview({ file, page }: { file: File; page: number }) {
         const target = canvas.current,
           context = target.getContext("2d");
         if (!context) throw new Error("Visualização indisponível neste navegador.");
-        const viewport = source.getViewport({ scale: 1.5 });
+        const viewport = source.getViewport({ scale: zoomed ? 3 : 1.5 });
         target.width = viewport.width;
         target.height = viewport.height;
         await source.render({ canvas: target, canvasContext: context, viewport }).promise;
@@ -49,9 +52,12 @@ export function PdfPreview({ file, page }: { file: File; page: number }) {
       cancelled = true;
       dispose();
     };
-  }, [file, page]);
+  }, [file, page, zoomed]);
   return (
-    <div className="pdf-preview">
+    <div className={`pdf-preview ${zoomed ? "zoomed" : ""}`}>
+      <Btn variant="outline" onClick={() => setZoomed((v) => !v)}>
+        {zoomed ? "Ajustar à largura" : "Ampliar página"}
+      </Btn>
       {busy && <p role="status">Abrindo página {page}…</p>}
       {error && (
         <p role="alert">
@@ -59,7 +65,9 @@ export function PdfPreview({ file, page }: { file: File; page: number }) {
           seu leitor de PDF. {error}
         </p>
       )}
-      <canvas ref={canvas} aria-label={`Página ${page} do PDF original`} role="img" />
+      <div className="pdf-canvas-viewport">
+        <canvas ref={canvas} aria-label={`Página ${page} do PDF original`} role="img" />
+      </div>
     </div>
   );
 }

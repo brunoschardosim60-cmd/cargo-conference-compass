@@ -1,5 +1,6 @@
 import { extractCargo, type PdfPageText } from "./pdf-import";
 import { createClientOnlyFn } from "@tanstack/react-start";
+import { pdfAssetOptions } from "./pdf-assets";
 
 export const readCargoPdf = createClientOnlyFn(async function (
   file: File,
@@ -17,7 +18,7 @@ export const readCargoPdf = createClientOnlyFn(async function (
   const pdfjs = await import("pdfjs-dist");
   const worker = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
   pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
-  const task = pdfjs.getDocument({ data: bytes, useSystemFonts: true });
+  const task = pdfjs.getDocument({ data: bytes, ...pdfAssetOptions(pdfjs.version) });
   try {
     const document = await task.promise;
     if (document.numPages > 100)

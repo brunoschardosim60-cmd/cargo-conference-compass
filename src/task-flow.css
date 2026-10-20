@@ -146,6 +146,15 @@
   height: auto;
   background: white;
 }
+.pdf-canvas-viewport {
+  overflow: auto;
+  max-height: 65vh;
+  margin-top: 12px;
+}
+.pdf-preview.zoomed canvas {
+  width: 200%;
+  max-width: none;
+}
 .pdf-warning {
   display: grid;
   gap: 12px;

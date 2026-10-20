@@ -5,7 +5,7 @@
 1. Conferências → Importar relação → selecionar PDF.
 2. O leitor percorre as páginas e identifica a tabela Doc / NF / Remetente / Destinatário / Destino / Endereço / Vol. / Peso.
 3. Administrativo confirma a origem, placa e motorista. Chegada, doca e responsável ficam vazios quando ausentes. Emissão e início de viagem nunca são convertidos em chegada.
-4. Revisar as linhas, pesquisar NFs, corrigir dados e consultar a página original na prévia. Notas e volumes inválidos ou duplicados bloqueiam confirmação. Totais divergentes ou não identificados exigem justificativa.
+4. Revisar as linhas, pesquisar NFs, corrigir dados e consultar a página original na prévia. Ampliar página permite ler a impressão miúda do documento sem reduzir os campos da aplicação. Notas e volumes inválidos ou duplicados bloqueiam confirmação. Totais divergentes ou não identificados exigem justificativa.
 5. Confirmar revisão de todas as páginas. O original é preservado antes de criar a operação. Todas as notas começam sem contagem e pendentes.
 6. O conferente encontra a carga no celular e vê clientes separados por destino. A NF abre a contagem física, calculadora, fotos e divergências já existentes.
 
@@ -20,6 +20,8 @@ O leitor não usa a quantidade de CT-e do cabeçalho como quantidade de notas ou
 ## Escopo e limites
 
 PDF.js 6.4.299, worker empacotado pelo Vite, processamento local sem APIs externas. Modelo principal: DAMDFE detalhado com texto extraível. Até 20 MB e 100 páginas por arquivo para limitar consumo de memória. PDFs com senha, inválidos, somente imagem ou com tabela não reconhecida geram mensagem clara, sem criar dados. OCR e outros leiautes não estão implementados.
+
+`scripts/prepare-pdfjs.mjs` copia codecs WASM/fallback e fontes padrão, com as licenças, do pacote instalado para assets locais versionados antes de dev/build. A prévia usa esses recursos da mesma origem; não depende de CDNs para imagens, códigos impressos e fontes do original. Assets gerados não são versionados no Git.
 
 Dados da relação persistem em localStorage; PDF original em IndexedDB (`poa-original-documents-v1`). Limpar dados do navegador remove ambos. O backup JSON inclui os metadados, mas não os arquivos PDF: baixar o original pela operação. Nenhum PDF pessoal ou dado da relação foi incluído no repositório ou enviado para um serviço de extração.
 
