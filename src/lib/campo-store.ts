@@ -2,7 +2,7 @@
 import { useSyncExternalStore } from "react";
 import { notas as seed, type NotaFiscal } from "@/lib/demo-data";
 
-export type NotaCampo = NotaFiscal & { obs?: string };
+export type NotaCampo = NotaFiscal & { obs?: string | undefined };
 
 let state: NotaCampo[] = seed.map((n) => ({ ...n }));
 const subs = new Set<() => void>();
