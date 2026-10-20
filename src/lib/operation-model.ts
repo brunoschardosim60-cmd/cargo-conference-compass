@@ -12,6 +12,7 @@ import {
 import { calculateCount } from "./count-calculator";
 import { productError, productSummary, type ProductCount } from "./product-count";
 import { demoOtherPlaces, type OtherPlace } from "./other-places";
+import type { PdfSource } from "./pdf-import";
 
 export type Evidence = { id: string; name: string; data: string; createdAt: string };
 export type Discovery = {
@@ -32,6 +33,9 @@ export type Note = Omit<NotaFiscal, "peso"> & {
   calculo?: string;
   produtos?: ProductCount | undefined;
   photos?: Evidence[];
+  documento?: string;
+  sourcePage?: number;
+  sourceLine?: number;
 };
 export type Case = Ocorrencia & {
   codigoOficial?: string;
@@ -44,7 +48,11 @@ export type Case = Ocorrencia & {
   discoveries?: Discovery[];
   updatedAt?: string;
 };
-export type Operation = Conferencia & { iniciadaEm?: string; concluidaEm?: string };
+export type Operation = Conferencia & {
+  iniciadaEm?: string;
+  concluidaEm?: string;
+  source?: PdfSource;
+};
 export type State = {
   operations: Operation[];
   notes: Note[];

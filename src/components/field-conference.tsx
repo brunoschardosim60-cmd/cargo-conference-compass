@@ -259,7 +259,11 @@ export function FieldConference({ id }: { id: string }) {
                     className="field-client"
                     key={n.id}
                     onClick={() => {
-                      setClient(n.destinatario.trim() || "Destinatário não informado");
+                      setClient(
+                        groups.find((g) => g.rows.some((row) => row.id === n.id))?.name ||
+                          n.destinatario.trim() ||
+                          "Destinatário não informado",
+                      );
                       setNoteId(n.id);
                       setQuery("");
                       setSavedMessage("");
@@ -294,7 +298,11 @@ export function FieldConference({ id }: { id: string }) {
                         </span>
                         <span className="field-row-text">
                           <strong>NF {n.nf}</strong>
-                          <span>{n.pedido || "Sem pedido"}</span>
+                          <span>
+                            {n.sourcePage
+                              ? n.praca || "Destino não informado"
+                              : n.pedido || "Sem pedido"}
+                          </span>
                           <StatusPill map={nfMap} value={n.status} />
                         </span>
                         <span className="relation-line-volumes">
@@ -672,6 +680,14 @@ function FieldNote({
           <dd>{note.pedido || "Não informado"}</dd>
           <dt>Remetente</dt>
           <dd>{note.remetente || "Não informado"}</dd>
+          {note.documento && (
+            <>
+              <dt>Documento de transporte / página do PDF</dt>
+              <dd>
+                {note.documento} · página {note.sourcePage}
+              </dd>
+            </>
+          )}
           <dt>Último registro</dt>
           <dd>
             {note.registradoPor

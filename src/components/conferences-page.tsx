@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Plus, SlidersHorizontal } from "lucide-react";
+import { Plus, SlidersHorizontal, FileUp } from "lucide-react";
 import { useOperations } from "@/lib/operation-context";
 import { operationMatches, openIssues, arrivalDay } from "@/lib/operation-search";
 import { Btn, FilterSelect, Panel, PageHeader, SearchBox } from "./ui-kit";
 import { OperationTable } from "./operation-table";
 import { NewOperation } from "./new-operation";
+import { PdfImportDialog } from "./pdf-import-dialog";
 
 export function ConferencesPage() {
   const { state } = useOperations();
@@ -15,6 +16,7 @@ export function ConferencesPage() {
   const [date, setDate] = useState("");
   const [issues, setIssues] = useState(false);
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const rows = state.operations.filter(
     (o) =>
       (scope === "todas" ||
@@ -31,10 +33,16 @@ export function ConferencesPage() {
         title="Conferências"
         subtitle="Encontre a carreta e acompanhe a contagem."
         actions={
-          <Btn onClick={() => setOpen(true)}>
-            <Plus size={18} />
-            Nova operação
-          </Btn>
+          <>
+            <Btn variant="outline" onClick={() => setOpen(true)}>
+              <Plus size={18} />
+              Nova operação
+            </Btn>
+            <Btn onClick={() => setImportOpen(true)}>
+              <FileUp size={18} />
+              Importar relação
+            </Btn>
+          </>
         }
       />
       <div className="conference-search">
@@ -114,6 +122,7 @@ export function ConferencesPage() {
         <Link to="/notas">Pesquisar todas as notas</Link>
       </div>
       <NewOperation open={open} onOpenChange={setOpen} />
+      <PdfImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }

@@ -12,7 +12,8 @@ import {
   type Case,
   type Operation,
 } from "@/lib/operation-model";
-import type { NotaFiscal } from "@/lib/demo-data";
+import { createReceiving, type OperationData, type OperationRow } from "@/lib/receiving-create";
+import type { PdfSource } from "@/lib/pdf-import";
 import { loadWorkspace, persistWorkspace } from "@/lib/local-workspace";
 import { toast } from "sonner";
 import { saveOtherPlace, type OtherPlaceInput } from "@/lib/other-places";
@@ -171,52 +172,12 @@ export function OperationProvider({ children }: { children: ReactNode }) {
       };
     });
   }
-  function addOperation(
-    data: Pick<Operation, "origem" | "placa" | "motorista" | "doca" | "responsavel"> & {
-      chegada?: string;
-    },
-    rows: Pick<NotaFiscal, "nf" | "pedido" | "destinatario" | "previstos" | "praca" | "pallet">[],
-  ) {
+  function addOperation(data: OperationData, rows: OperationRow[], source?: PdfSource) {
     const id = `CF-LOCAL-${crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase()}`,
       now = timestamp();
     const eventId = crypto.randomUUID();
-    const notes = rows.map((n) => ({
-      ...n,
-      id: crypto.randomUUID(),
-      conferencia: id,
-      remetente: "",
-      peso: null,
-      encontrados: null,
-      status: "pendente" as const,
-      observacao: "",
-    }));
-    commit((s) => ({
-      ...s,
-      operations: [
-        {
-          ...data,
-          id,
-          chegada: data.chegada?.replace("T", " ") || "Não informada",
-          status: "aguardando",
-          notas: rows.length,
-          volumes: rows.reduce((a, n) => a + n.previstos, 0),
-          conferidos: 0,
-        },
-        ...s.operations,
-      ],
-      notes: [...s.notes, ...notes],
-      history: [
-        {
-          id: eventId,
-          quando: now,
-          usuario: actor,
-          tipo: "criada",
-          ref: id,
-          descricao: "Operação de demonstração criada por digitação manual.",
-        },
-        ...s.history,
-      ],
-    }));
+    const ids = { operation: id, event: eventId, notes: rows.map(() => crypto.randomUUID()) };
+    commit((s) => createReceiving(s, data, rows, ids, actor, now, source));
     return id;
   }
   return (

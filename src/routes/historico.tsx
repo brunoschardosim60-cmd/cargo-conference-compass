@@ -29,7 +29,9 @@ function Page() {
                 [
                   JSON.stringify(
                     {
-                      ambiente: "DEMONSTRAÇÃO — dados de teste, sem autenticação real",
+                      ambiente: "AVALIAÇÃO LOCAL — sem autenticação; pode conter dados importados",
+                      documentos:
+                        "PDFs originais ficam no armazenamento deste aparelho; baixe-os pela operação. Este JSON contém somente os registros e metadados.",
                       exportadoEm: new Date().toISOString(),
                       ...state,
                     },
@@ -47,7 +49,7 @@ function Page() {
               setTimeout(() => URL.revokeObjectURL(url), 1000);
             }}
           >
-            Baixar registros de teste
+            Baixar backup local (.json)
           </Btn>
         }
       />

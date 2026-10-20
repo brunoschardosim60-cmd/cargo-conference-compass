@@ -53,7 +53,7 @@ function Page() {
         >
           <Row
             title="Persistência"
-            text="Teste salvo neste navegador. Não compartilha dados com outros aparelhos; limpar os dados do navegador apaga estes registros."
+            text="Registros e PDFs originais salvos neste navegador. Não compartilha dados entre aparelhos; limpar os dados do navegador remove esses arquivos e registros."
             value={<Pill tone="warning">Aparelho local</Pill>}
           />
           <Row
@@ -93,8 +93,8 @@ function Page() {
         >
           <Row
             title="Importação de PDF"
-            text="Extração multipágina, revisão humana, prevenção de duplicidades e guarda do original."
-            value={<Pill tone="neutral">Etapa 4</Pill>}
+            text="Modelo DAMDFE detalhado: leitura multipágina local, revisão obrigatória, bloqueio por hash e PDF original preservado. Sem OCR para imagens."
+            value={<Pill tone="success">Leitor local</Pill>}
           />
           <Row
             title="Códigos oficiais"

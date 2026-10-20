@@ -22,6 +22,7 @@ import { UnsavedChanges } from "@/components/unsaved-changes";
 import { EvidencePhotos } from "@/components/evidence-photos";
 import { productSummary } from "@/lib/product-count";
 import { CountCalculator } from "@/components/count-calculator";
+import { PdfSource } from "@/components/pdf-source";
 export const Route = createFileRoute("/conferencias/$id")({
   validateSearch: (s: Record<string, unknown>): { nota?: string } =>
     typeof s["nota"] === "string" ? { nota: s["nota"] } : {},
@@ -152,6 +153,7 @@ function Workbench({ id, initialNote }: { id: string; initialNote: string | unde
           <StatusPill map={confMap} value={conf.status} />
         </div>
       </div>
+      {conf.source && <PdfSource source={conf.source} />}
       <div className="workbench">
         <div>
           <div className="toolbar">

@@ -6,6 +6,8 @@ Não existe cliente de banco, serviço de identidade, endpoint autenticado, stor
 
 Nenhuma migração ou mudança de infraestrutura de produção foi executada. Não foram criadas credenciais nem gravados segredos.
 
+Atualização do leitor de PDF: a extração do DAMDFE detalhado funciona localmente, com revisão humana e deduplicação por SHA-256. O PDF original fica no IndexedDB deste navegador, separado do estado em localStorage. Isso não equivale a storage privado no servidor e não permite outro aparelho acessar a relação. Na conexão centralizada, transferir arquivos por endpoint autenticado, recalcular hash no servidor e gravar relação, revisão e auditoria em transação.
+
 ## Separações preparadas
 
 - Regras de nota, localização e outras praças em funções de domínio independentes de React.

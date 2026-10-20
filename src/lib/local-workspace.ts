@@ -62,6 +62,20 @@ const storedState = z
           status: z.enum(["em_andamento", "pausada", "concluida", "aguardando"]),
           iniciadaEm: text.optional(),
           concluidaEm: text.optional(),
+          source: z
+            .object({
+              sha256: text.regex(/^[a-f0-9]{64}$/),
+              name: text,
+              size: count,
+              pages: count,
+              parser: z.literal("damdfe-details-v1"),
+              reviewedAt: text,
+              declaredRows: count.nullable(),
+              declaredVolumes: count.nullable(),
+              extractedRows: count,
+              reviewReason: text,
+            })
+            .optional(),
         })
         .passthrough(),
     ),

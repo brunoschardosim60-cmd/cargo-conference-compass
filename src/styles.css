@@ -901,7 +901,7 @@ select {
 }
 .field-label {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   color: #52677e;
   margin-bottom: 6px;
@@ -911,7 +911,7 @@ select {
 }
 .field-group > span {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   color: #52677e;
   font-weight: 500;
   margin-bottom: 6px;
@@ -1033,25 +1033,25 @@ table {
   border-collapse: collapse;
 }
 thead th {
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.65px;
   height: 39px;
   background: #f7f9fc;
 }
 tbody td {
-  font-size: 12px;
+  font-size: 14px;
   height: 65px;
 }
 tbody td:first-child {
   padding-left: 19px;
 }
 .cell-primary {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: #21476f;
 }
 .cell-sub {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted-foreground);
   margin-top: 5px;
 }
@@ -1059,7 +1059,7 @@ tbody td:first-child {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 500;
   color: #245d98;
   white-space: nowrap;
@@ -1081,7 +1081,7 @@ tbody td:first-child {
   display: flex;
   align-items: center;
   gap: 9px;
-  font-size: 10px;
+  font-size: 13px;
   color: #66768a;
 }
 .toolbar {
@@ -1108,7 +1108,7 @@ tbody td:first-child {
   padding: 13px 0;
   color: #617187;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 14px;
 }
 .segment-tabs button[aria-pressed="true"] {
   border-color: #285b8c;
@@ -1147,14 +1147,14 @@ tbody td:first-child {
 }
 .context-item small {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted-foreground);
   text-transform: uppercase;
   letter-spacing: 0.7px;
   margin-bottom: 5px;
 }
 .context-item strong {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
 }
 .workbench {
@@ -1195,7 +1195,7 @@ tbody td:first-child {
 }
 .quantity-grid small {
   display: block;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--muted-foreground);
   margin-bottom: 7px;
 }
@@ -1228,7 +1228,7 @@ tbody td:first-child {
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 10px 8px;
-  font-size: 10px;
+  font-size: 13px;
   text-align: left;
 }
 .result-option:has(input:checked) {
@@ -1236,8 +1236,8 @@ tbody td:first-child {
   background: #edf3f9;
 }
 .result-option input {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
 }
 .note-selected {
   background: #edf3f9 !important;
@@ -1256,11 +1256,11 @@ tbody td:first-child {
 }
 .editor-actions button {
   flex: 1;
-  font-size: 11px;
+  font-size: 14px;
 }
 .error-text {
   color: var(--danger);
-  font-size: 11px;
+  font-size: 14px;
   margin-top: 10px;
 }
 .case-layout {
@@ -1282,7 +1282,7 @@ tbody td:first-child {
   border-bottom: 1px solid var(--border);
 }
 .detail-section h3 {
-  font-size: 10px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.9px;
   color: #667b92;
@@ -1295,11 +1295,11 @@ tbody td:first-child {
 }
 .detail-grid small {
   display: block;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--muted-foreground);
 }
 .detail-grid p {
-  font-size: 12px;
+  font-size: 14px;
   margin-top: 4px;
 }
 .timeline {
@@ -1314,7 +1314,7 @@ tbody td:first-child {
   border-bottom: 1px solid var(--border);
 }
 .timeline time {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted-foreground);
 }
 .timeline h3 {
@@ -1323,7 +1323,7 @@ tbody td:first-child {
   overflow-wrap: anywhere;
 }
 .timeline p {
-  font-size: 10px;
+  font-size: 14px;
   color: var(--muted-foreground);
   margin-top: 5px;
 }

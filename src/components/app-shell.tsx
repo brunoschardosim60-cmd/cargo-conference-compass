@@ -152,7 +152,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         </header>
         <div className="field-demo">
-          <span>DEMONSTRAÇÃO</span> Teste local · não sincroniza entre aparelhos
+          <span>AVALIAÇÃO LOCAL</span> Registros neste aparelho · sem sincronização
         </div>
         <main id="main" tabIndex={-1}>
           {children}
@@ -210,9 +210,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
         </header>
         <div className="demo-banner">
-          <span className="demo-label">DEMONSTRAÇÃO</span>
+          <span className="demo-label">AVALIAÇÃO LOCAL</span>
           <span>
-            Dados de teste salvos neste navegador · sem login ou sincronização entre aparelhos.
+            Registros salvos neste navegador · sem login ou sincronização entre aparelhos.
           </span>
           <Link to="/configuracoes">
             Sobre este ambiente <ArrowUpRight size={13} />
